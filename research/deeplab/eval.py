@@ -159,15 +159,20 @@ def main(unused_argv):
     num_eval_iters = None
     if FLAGS.max_number_of_evaluations > 0:
       num_eval_iters = FLAGS.max_number_of_evaluations
-    slim.evaluation.evaluation_loop(
+    # slim.evaluation.evaluation_loop(
+    #     master=FLAGS.master,
+    #     checkpoint_dir=FLAGS.checkpoint_dir,
+    #     logdir=FLAGS.eval_logdir,
+    #     num_evals=num_batches,
+    #     eval_op=list(metrics_to_updates.values()),
+    #     max_number_of_evaluations=num_eval_iters,
+    #     eval_interval_secs=FLAGS.eval_interval_secs)
+    slim.evaluation.evaluate_once(
         master=FLAGS.master,
-        checkpoint_dir=FLAGS.checkpoint_dir,
+        checkpoint_path=FLAGS.checkpoint_dir,
         logdir=FLAGS.eval_logdir,
         num_evals=num_batches,
-        eval_op=list(metrics_to_updates.values()),
-        max_number_of_evaluations=num_eval_iters,
-        eval_interval_secs=FLAGS.eval_interval_secs)
-
+        eval_op=list(metrics_to_updates.values()))
 
 if __name__ == '__main__':
   flags.mark_flag_as_required('checkpoint_dir')

@@ -25,20 +25,20 @@ import tensorflow as tf
 
 #FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('image_folder', 
-                           './VOCdevkit/VOC2012/JPEGImages', 
-                           'Folder containing images.')
-tf.app.flags.DEFINE_string(
-    'semantic_segmentation_folder',
-    './VOCdevkit/VOC2012/SegmentationClassRaw',
-    'Folder containing semantic segmentation annotations.')
+# tf.app.flags.DEFINE_string('image_folder', 
+#                            './VOCdevkit/VOC2012/JPEGImages', 
+#                            'Folder containing images.')
+# tf.app.flags.DEFINE_string(
+#     'semantic_segmentation_folder',
+#     './VOCdevkit/VOC2012/SegmentationClassRaw',
+#     'Folder containing semantic segmentation annotations.')
 tf.app.flags.DEFINE_string(
     'list_folder',
-    './VOCdevkit/VOC2012/ImageSets/Segmentation',
+    './',
     'Folder containing lists for training and validation')
 tf.app.flags.DEFINE_string(
     'output_dir',
-    './tfrecord',
+    './tfrecord_simple',
     'Path to save converted SSTable of TensorFlow examples.')
 
 #tf.app.flags.DEFINE_string(
@@ -79,15 +79,18 @@ def _convert_dataset(dataset_split):
             i + 1, len(filenames), shard_id))
         sys.stdout.flush()
         # Read the image.
-        image_filename = os.path.join(
-            FLAGS.image_folder, filenames[i] + '.' + FLAGS.image_format)
+        # image_filename = os.path.join(
+        #     FLAGS.image_folder, filenames[i] + '.' + FLAGS.image_format)
+        image_filename = filenames[i].split(' ')[0]
+        print(image_filename)
         image_data = tf.gfile.FastGFile(image_filename, 'rb').read()
         # tf.gfile.FastGFile::read(): Returns the contents of a file as a string.
         height, width = image_reader.read_image_dims(image_data)
         # Read the semantic segmentation annotation.
-        seg_filename = os.path.join(
-            FLAGS.semantic_segmentation_folder,
-            filenames[i] + '.' + FLAGS.label_format)
+        # seg_filename = os.path.join(
+        #     FLAGS.semantic_segmentation_folder,
+        #     filenames[i] + '.' + FLAGS.label_format)
+        seg_filename = filenames[i].split(' ')[1]
         seg_data = tf.gfile.FastGFile(seg_filename, 'rb').read()
         seg_height, seg_width = label_reader.read_image_dims(seg_data)
         if height != seg_height or width != seg_width:

@@ -1,4 +1,4 @@
-# Copyright 2018 The TensorFlow Authors All Rights Reserved.
+#Copyright 2018 The TensorFlow Authors All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,26 +17,25 @@
 import tensorflow as tf
 from deeplab import common
 from deeplab import input_preprocess
+from my_training_utils import input_preprocess_instance
 
 slim = tf.contrib.slim
 
 dataset_data_provider = slim.dataset_data_provider
 
 
+
 def _get_data(data_provider, dataset_split):
   """Gets data from data provider.
-
   Args:
     data_provider: An object of slim.data_provider.
     dataset_split: Dataset split.
-
   Returns:
     image: Image Tensor.
     label: Label Tensor storing segmentation annotations.
     image_name: Image name.
     height: Image height.
     width: Image width.
-
   Raises:
     ValueError: Failed to find label.
   """
@@ -72,15 +71,15 @@ def get(dataset,
         num_threads=1,
         dataset_split=None,
         is_training=True,
-        model_variant=None):
+        model_variant=None,
+        instance_seg=False,
+        instance_seg_args={}):
   """Gets the dataset split for semantic segmentation.
-
   This functions gets the dataset split for semantic segmentation. In
   particular, it is a wrapper of (1) dataset_data_provider which returns the raw
   dataset split, (2) input_preprcess which preprocess the raw data, and (3) the
   Tensorflow operation of batching the preprocessed data. Then, the output could
   be directly used by training, evaluation or visualization.
-
   Args:
     dataset: An instance of slim Dataset.
     crop_size: Image crop size [height, width].
@@ -99,10 +98,8 @@ def get(dataset,
     is_training: Is training or not.
     model_variant: Model variant (string) for choosing how to mean-subtract the
       images. See feature_extractor.network_map for supported model variants.
-
   Returns:
     A dictionary of batched Tensors for semantic segmentation.
-
   Raises:
     ValueError: dataset_split is None, failed to find labels, or label shape
       is not valid.
@@ -131,20 +128,39 @@ def get(dataset,
                        '[height, width, 1].')
 
     label.set_shape([None, None, 1])
-  original_image, image, label = input_preprocess.preprocess_image_and_label(
-      image,
-      label,
-      crop_height=crop_size[0],
-      crop_width=crop_size[1],
-      min_resize_value=min_resize_value,
-      max_resize_value=max_resize_value,
-      resize_factor=resize_factor,
-      min_scale_factor=min_scale_factor,
-      max_scale_factor=max_scale_factor,
-      scale_factor_step_size=scale_factor_step_size,
-      ignore_label=dataset.ignore_label,
-      is_training=is_training,
-      model_variant=model_variant)
+
+  if instance_seg:
+    inner_extension_ratio = instance_seg_args['inner_extension_ratio']
+    outer_extension_ratio = instance_seg_args['outer_extension_ratio']
+    filling = instance_seg_args['filling']
+    original_image, image, label = input_preprocess_instance.preprocess_image_and_label(
+        image,
+        label,
+        crop_size[0],
+        crop_size[1],
+        inner_extension_ratio=inner_extension_ratio,
+        outer_extension_ratio=outer_extension_ratio,
+        filling=filling,
+        ignore_label=dataset.ignore_label,
+        is_training=is_training,
+        model_variant=model_variant)
+  else:
+    original_image, image, label = input_preprocess.preprocess_image_and_label(
+        image,
+        label,
+        crop_height=crop_size[0],
+        crop_width=crop_size[1],
+        min_resize_value=min_resize_value,
+        max_resize_value=max_resize_value,
+        resize_factor=resize_factor,
+        min_scale_factor=min_scale_factor,
+        max_scale_factor=max_scale_factor,
+        scale_factor_step_size=scale_factor_step_size,
+        ignore_label=dataset.ignore_label,
+        is_training=is_training,
+        model_variant=model_variant)
+
+
   sample = {
       common.IMAGE: image,
       common.IMAGE_NAME: image_name,

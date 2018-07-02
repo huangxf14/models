@@ -1,4 +1,4 @@
-"""
+""""
 Training script adjusted from slim.train_image_classifier.py
 """
 
@@ -10,8 +10,6 @@ import tensorflow as tf
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-import sys
-#sys.path.append('/home/corp.owlii.com/yi.xu/tensorflow/models/research')
 import deeplab
 from deeplab import common
 #from deeplab.datasets import segmentation_dataset
@@ -22,13 +20,11 @@ from deployment import model_deploy
 #from nets import nets_factory
 from preprocessing import preprocessing_factory
 
-sys.path.append('..')
+from local_net_fn import nets_factory
 from my_data_utils import segmentation_dataset
 
-from local_net_fn import nets_factory
 
 slim = tf.contrib.slim
-
 
 
 tf.app.flags.DEFINE_string(
@@ -202,11 +198,11 @@ tf.app.flags.DEFINE_multi_integer(
 tf.app.flags.DEFINE_multi_integer(
     'output_size', [512, 512], 'As mentioned')
 
-#tf.app.flags.DEFINE_integer(
-#    'min_resize_value', None, 'See min_resize_value in Deeplab.')
+tf.app.flags.DEFINE_integer(
+    'min_resize_value', None, 'See min_resize_value in Deeplab.')
 
-#tf.app.flags.DEFINE_integer(
-#    'max_resize_value', None, 'See max_resize_value in Deeplab.')
+tf.app.flags.DEFINE_integer(
+    'max_resize_value', None, 'See max_resize_value in Deeplab.')
 
 #tf.app.flags.DEFINE_integer(
 #    'resize_factor', None, 'As mentioned..')
@@ -246,6 +242,22 @@ tf.app.flags.DEFINE_boolean(
     'When restoring a checkpoint would ignore missing variables.')
 
 #####################
+# instance seg flags #
+#####################
+
+tf.app.flags.DEFINE_boolean(
+    'instance_seg', False, 'As mentioned')
+
+tf.app.flags.DEFINE_float(
+    'inner_extension_ratio', -0.1, 'As mentioned')
+
+tf.app.flags.DEFINE_float(
+    'outer_extension_ratio', 0.2, 'As mentioned')
+
+tf.app.flags.DEFINE_string(
+    'filling', 'central_padding', 'central_padding or resize')
+
+#####################
 # Other flags #
 #####################
 
@@ -255,22 +267,16 @@ tf.app.flags.DEFINE_integer(
 tf.app.flags.DEFINE_float(
     'keep_ckpt_every_n_hours', 1.0, 'As mentioned')
 
-tf.app.flags.DEFINE_boolean(
-    'adjust_for_deploy', False, 'As mentioned')
-
 FLAGS = tf.app.flags.FLAGS
 
 
 def _configure_learning_rate(num_samples_per_epoch, global_step):
   """Configures the learning rate.
-
   Args:
     num_samples_per_epoch: The number of samples in each epoch of training.
     global_step: The global_step tensor.
-
   Returns:
     A `Tensor` representing the learning rate.
-
   Raises:
     ValueError: if
   """
@@ -303,13 +309,10 @@ def _configure_learning_rate(num_samples_per_epoch, global_step):
 
 def _configure_optimizer(learning_rate):
   """Configures the optimizer used for training.
-
   Args:
     learning_rate: A scalar or `Tensor` learning rate.
-
   Returns:
     An instance of an optimizer.
-
   Raises:
     ValueError: if FLAGS.optimizer is not recognized.
   """
@@ -355,10 +358,8 @@ def _configure_optimizer(learning_rate):
 
 def _get_init_fn():
   """Returns a function run by the chief worker to warm-start the training.
-
   Note that the init_fn is only run when initializing the model during the very
   first global step.
-
   Returns:
     An init function run by the supervisor.
   """
@@ -404,7 +405,6 @@ def _get_init_fn():
 
 def _get_variables_to_train():
   """Returns a list of variables to train.
-
   Returns:
     A list of variables to train by the optimizer.
   """
@@ -456,7 +456,7 @@ def main(_):
         FLAGS.model_name,
         num_classes=(dataset.num_classes - FLAGS.labels_offset),
         weight_decay=FLAGS.weight_decay,
-        is_training=(not FLAGS.adjust_for_deploy))
+        is_training=True)
 
     #####################################
     # Select the preprocessing function #
@@ -470,44 +470,43 @@ def main(_):
     # Create a dataset provider that loads data from the dataset #
     ##############################################################
     with tf.device(deploy_config.inputs_device()):
-#      provider = slim.dataset_data_provider.DatasetDataProvider(
-#          dataset,
-#          num_readers=FLAGS.num_readers,
-#          common_queue_capacity=20 * FLAGS.batch_size,
-#          common_queue_min=10 * FLAGS.batch_size)
-#      [image, label] = provider.get(['image', 'label'])
-#      label -= FLAGS.labels_offset
-#
-#      train_image_size = FLAGS.train_image_size or network_fn.default_image_size
-#      # train_image_size = 224
-#
-#      image = image_preprocessing_fn(image, train_image_size, train_image_size)
-#
-#      images, labels = tf.train.batch(
-#          [image, label],
-#          batch_size=FLAGS.batch_size,
-#          num_threads=FLAGS.num_preprocessing_threads,
-#          capacity=5 * FLAGS.batch_size)
-#      labels = slim.one_hot_encoding(
-#          labels, dataset.num_classes - FLAGS.labels_offset)
-#      batch_queue = slim.prefetch_queue.prefetch_queue(
-#          [images, labels], capacity=2 * deploy_config.num_clones)
-
       clone_batch_size = int(FLAGS.batch_size / deploy_config.num_clones)
 
-      samples = input_generator.get(
-          dataset,
-          FLAGS.train_crop_size,
-          clone_batch_size,
-          min_resize_value=FLAGS.min_resize_value,
-          max_resize_value=FLAGS.max_resize_value,
-          resize_factor=FLAGS.resize_factor,
-          min_scale_factor=FLAGS.min_scale_factor,
-          max_scale_factor=FLAGS.max_scale_factor,
-          scale_factor_step_size=FLAGS.scale_factor_step_size,
-          dataset_split=FLAGS.dataset_split_name,
-          is_training=True,
-          model_variant=FLAGS.model_variant)
+      if FLAGS.instance_seg:
+        instance_seg_args = {
+            'inner_extension_ratio': FLAGS.inner_extension_ratio,
+            'outer_extension_ratio': FLAGS.outer_extension_ratio,
+            'filling': FLAGS.filling
+        }
+        samples = input_generator.get(
+            dataset,
+            FLAGS.train_crop_size,
+            clone_batch_size,
+            min_resize_value=FLAGS.min_resize_value,
+            max_resize_value=FLAGS.max_resize_value,
+            resize_factor=FLAGS.resize_factor,
+            min_scale_factor=FLAGS.min_scale_factor,
+            max_scale_factor=FLAGS.max_scale_factor,
+            scale_factor_step_size=FLAGS.scale_factor_step_size,
+            dataset_split=FLAGS.dataset_split_name,
+            is_training=True,
+            model_variant=FLAGS.model_variant,
+            instance_seg=FLAGS.instance_seg,
+            instance_seg_args=instance_seg_args)
+      else:
+        samples = input_generator.get(
+            dataset,
+            FLAGS.train_crop_size,
+            clone_batch_size,
+            min_resize_value=FLAGS.min_resize_value,
+            max_resize_value=FLAGS.max_resize_value,
+            resize_factor=FLAGS.resize_factor,
+            min_scale_factor=FLAGS.min_scale_factor,
+            max_scale_factor=FLAGS.max_scale_factor,
+            scale_factor_step_size=FLAGS.scale_factor_step_size,
+            dataset_split=FLAGS.dataset_split_name,
+            is_training=True,
+            model_variant=FLAGS.model_variant)
 
       batch_queue = slim.prefetch_queue.prefetch_queue(
           samples, capacity=128 * deploy_config.num_clones)
@@ -516,26 +515,6 @@ def main(_):
     ####################
     # Define the model #
     ####################
-#    def clone_fn(batch_queue):
-#      """Allows data parallelism by creating multiple clones of network_fn."""
-#      images, labels = batch_queue.dequeue()
-#      logits, end_points = network_fn(images)
-#      print('images.shape: ', images.shape)  # (32, 224, 224, 3)
-#      print('labels.shape: ', labels.shape)  # (32, 5)
-#      print('logits.shape: ', logits.shape)  # (32, 5)
-#
-#      #############################
-#      # Specify the loss function #
-#      #############################
-#      # There is no AuxLogits for mobilenet
-#      if 'AuxLogits' in end_points:
-#        slim.losses.softmax_cross_entropy(
-#            end_points['AuxLogits'], labels,
-#            label_smoothing=FLAGS.label_smoothing, weights=0.4,
-#            scope='aux_loss')
-#      slim.losses.softmax_cross_entropy(
-#          logits, labels, label_smoothing=FLAGS.label_smoothing, weights=1.0)
-#      return end_points
     def clone_fn(batch_queue, num_classes, ignore_label):
       samples = batch_queue.dequeue()
 
@@ -553,16 +532,8 @@ def main(_):
       print('logits.shape: ', logits.shape)
 
       # define loss
-      if FLAGS.adjust_for_deploy:
-        logits = tf.image.resize_bilinear(
-            logits, FLAGS.output_size, align_corners=True)
-      else:
-        logits = tf.image.resize_bilinear(
-            logits, tf.shape(labels)[1:3], align_corners=True)
-#        heatmap = tf.nn.softmax(logits)
-#        heatmap = tf.slice(heatmap, [0, 0, 0, 1], [clone_batch_size,
-#                           FLAGS.output_size[0], FLAGS.output_size[1], 1], name='heatmap')
-        # heatmap = tf.squeeze(heatmap, name='heatmap')
+      logits = tf.image.resize_bilinear(
+          logits, tf.shape(labels)[1:3], align_corners=True)
 
       print('upsampled logits shape: ', logits.shape)
 

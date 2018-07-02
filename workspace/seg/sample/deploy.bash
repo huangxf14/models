@@ -1,19 +1,19 @@
 #!/bin/bash
 
-dataset_name="coco2017_saliency_ext"
-tfrecord_dir="coco2017/saliency_ext/tfrecord"
-log_dir="dec1/voc"
+dataset_name="coco-instance-simple"
+tfrecord_dir="coco-instance/tfrecord_simple"
+log_dir="coco-instance/model_instance_reshape_2/all"
 
-model_name="mobilenet_v2_035_sgmt"
-ckpt="${log_dir}/model.ckpt-12"
+model_name="mobilenet_v2_035_instance_2"
+ckpt="${log_dir}/model.ckpt-400000"
 
 ###############################################
-HOME="/home/corp.owlii.com/yi.xu"
-SLIM="${HOME}/tensorflow/models/research/slim"
-TFBAZEL="${HOME}/tensorflow/tensorflow/bazel-bin"
-WORKSPACE="${HOME}/workspace/models/workspace/seg"
+HOME="/home/corp.owlii.com/xiufeng.huang"
+SLIM="${HOME}/models/research/slim"
+TFBAZEL="${HOME}/tensorflow/bazel-bin"
+WORKSPACE="${HOME}/models/workspace/seg"
 TF="${HOME}/tensorflow/tensorflow"
-DATASET_DIR="${HOME}/data/${tfrecord_dir}"
+DATASET_DIR="${WORKSPACE}/${tfrecord_dir}"
 INIT_CHECKPOINT="${WORKSPACE}/${ckpt}"
 DEPLOY_DIR="${WORKSPACE}/${log_dir}/deploy"
 mkdir -p ${DEPLOY_DIR}
@@ -43,7 +43,7 @@ ml_output_node=None  # use None when the logits is already 512x512
 python train_sgmt.py \
   --train_dir=${DEPLOY_DIR} \
   --dataset_name=${dataset_name} \
-  --dataset_split_name=train \
+  --dataset_split_name=coco_train_instance \
   --dataset_dir=${DATASET_DIR} \
   --model_name=${model_name} \
   --checkpoint_path=${INIT_CHECKPOINT} \
@@ -53,9 +53,10 @@ python train_sgmt.py \
   --learning_rate_decay_type=fixed \
   --weight_decay=0.00004 \
   --use_decoder=True \
-  --adjust_for_deploy=true
+  --adjust_for_deploy=true 
 
 
+echo ${ckpt}
 # Freeze the graph
 python ${WORKSPACE}/my_graph_utils/freeze_graph.py \
     --input_graph=${pbtxt} \
@@ -63,7 +64,6 @@ python ${WORKSPACE}/my_graph_utils/freeze_graph.py \
     --input_checkpoint=${ckpt} \
     --output_graph=${frozen} \
     --output_node_names=${output_node::-2} \
-
 
 ${TFBAZEL}/tensorflow/tools/graph_transforms/transform_graph \
     --in_graph=${frozen} \
@@ -76,7 +76,6 @@ ${TFBAZEL}/tensorflow/tools/graph_transforms/transform_graph \
                   fold_batch_norms
                   fold_old_batch_norms'
 #                  add_default_attributes'
-
 
 python ${WORKSPACE}/my_graph_utils/pb2pbtxt.py \
     --pb_path=${deploy} \

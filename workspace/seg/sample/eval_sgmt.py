@@ -89,14 +89,20 @@ tf.app.flags.DEFINE_multi_integer(
     'eval_crop_size', [512, 512],
     'Image crop size [height, width] for evaluation.')
 
-tf.app.flags.DEFINE_multi_integer(
-    'output_size', [512, 512], 'As mentioned')
+#tf.app.flags.DEFINE_multi_integer(
+#    'output_size', [512, 512], 'As mentioned')
 
-#tf.app.flags.DEFINE_integer(
-#    'min_resize_value', 512, 'As mentioned')
+tf.app.flags.DEFINE_integer(
+    'min_resize_value', 512, 'As mentioned')
 
-#tf.app.flags.DEFINE_integer(
-#    'max_resize_value', 512, 'As mentioned')
+tf.app.flags.DEFINE_integer(
+    'max_resize_value', 512, 'As mentioned')
+
+tf.app.flags.DEFINE_float(
+    'min_scale_factor', 1.0, 'As mentioned')
+
+tf.app.flags.DEFINE_float(
+    'max_scale_factor', 1.0, 'As mentioned')
 
 #tf.app.flags.DEFINE_float(
 #    'resize_factor', None,
@@ -119,6 +125,20 @@ tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 5,
 tf.app.flags.DEFINE_integer('num_clones', 1, 'As mentioned')
 
 tf.app.flags.DEFINE_bool('use_cpu', False, 'As mentioned')
+
+
+#####################
+# instance seg flags #
+#####################
+tf.app.flags.DEFINE_boolean(
+    'instance_seg', False, 'As mentioned')
+tf.app.flags.DEFINE_float(
+    'inner_extension_ratio', -0.1, 'As mentioned')
+tf.app.flags.DEFINE_float(
+    'outer_extension_ratio', 0.2, 'As mentioned')
+tf.app.flags.DEFINE_string(
+    'filling', 'central_padding', 'central_padding or resize')
+
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -180,16 +200,40 @@ def main(_):
 #        num_threads=FLAGS.num_preprocessing_threads,
 #        capacity=5 * FLAGS.batch_size)
 
-    samples = input_generator.get(
-        dataset, 
-        FLAGS.eval_crop_size,
-        FLAGS.batch_size,
-        min_resize_value=FLAGS.min_resize_value,
-        max_resize_value=FLAGS.max_resize_value,
-        resize_factor=FLAGS.resize_factor,
-        dataset_split=FLAGS.eval_split,
-        is_training=False,
-        model_variant=FLAGS.model_variant)
+
+    if FLAGS.instance_seg:
+      instance_seg_args = {
+          'inner_extension_ratio': FLAGS.inner_extension_ratio,
+          'outer_extension_ratio': FLAGS.outer_extension_ratio,
+          'filling': FLAGS.filling
+      }
+      samples = input_generator.get(
+          dataset, 
+          FLAGS.eval_crop_size,
+          FLAGS.batch_size,
+          min_resize_value=FLAGS.min_resize_value,
+          max_resize_value=FLAGS.max_resize_value,
+          resize_factor=FLAGS.resize_factor,
+          min_scale_factor=FLAGS.min_scale_factor,
+          max_scale_factor=FLAGS.max_scale_factor,
+          dataset_split=FLAGS.eval_split,
+          is_training=False,
+          model_variant=FLAGS.model_variant,
+          instance_seg=FLAGS.instance_seg,
+          instance_seg_args=instance_seg_args)
+    else:
+      samples = input_generator.get(
+          dataset, 
+          FLAGS.eval_crop_size,
+          FLAGS.batch_size,
+          min_resize_value=FLAGS.min_resize_value,
+          max_resize_value=FLAGS.max_resize_value,
+          resize_factor=FLAGS.resize_factor,
+          min_scale_factor=FLAGS.min_scale_factor,
+          max_scale_factor=FLAGS.max_scale_factor,
+          dataset_split=FLAGS.eval_split,
+          is_training=False,
+          model_variant=FLAGS.model_variant)
 
     images = samples[common.IMAGE]
     labels = samples[common.LABEL]

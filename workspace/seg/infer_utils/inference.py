@@ -6,13 +6,12 @@ from PIL import Image
 import cv2
 
 import tensorflow as tf
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import time
 
 
-workspace = '/home/corp.owlii.com/yi.xu/workspace/sgmt/'
+workspace = '/home/corp.owlii.com/xiufeng.huang/models/workspace/seg/'
 
-model_dir = workspace + 'decoder.fromcoco/train/deploy/deployed_graph/'
+model_dir = workspace + '/LV-instance1/model035_instance/all/deploy/'
 res_dir = model_dir + 'res/'
 if not os.path.exists(res_dir):
   os.makedirs(res_dir)
@@ -27,7 +26,7 @@ class SgmtModel(object):
   """Class to load deeplab model and run inference."""
 
   INPUT_TENSOR_NAME = 'image:0'
-  OUTPUT_TENSOR_NAME = 'MobilenetV2/heatmap:0'
+  OUTPUT_TENSOR_NAME = 'heatmap:0'
 
   def __init__(self):
     """Creates and loads pretrained deeplab model."""
@@ -61,18 +60,14 @@ class SgmtModel(object):
     resized_image = image.convert('RGB').resize(target_size, Image.ANTIALIAS)
     the_input = [np.asarray(resized_image)]
 
-    heatmap = self.sess.run(
-        self.OUTPUT_TENSOR_NAME,
-        feed_dict={self.INPUT_TENSOR_NAME: the_input})
-
     t1 = time.time()
-    temp = self.sess.run(
+    heatmap = self.sess.run(
         self.OUTPUT_TENSOR_NAME,
         feed_dict={self.INPUT_TENSOR_NAME: the_input})
     t2 = time.time()
     total = (t2 - t1) * 1000
 
-    heatmap = heatmap[0, :, :, 1:2]
+    heatmap = heatmap[0, :, :, :]
 
     return heatmap, total
 
@@ -111,6 +106,7 @@ def infer_one(image, use_heatmap=True):
   # run model
   model = SgmtModel()
   heatmap, running_time = model.run(image)
+  heatmap = np.float32(heatmap) / 255.0
   if not use_heatmap:
     heatmap = np.where(heatmap > 0.5, 1, 0)
 

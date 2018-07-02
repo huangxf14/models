@@ -1,29 +1,31 @@
 #!/bin/bash
 
 
-log_dir="dec1/voc"
+log_dir="LV-instance1/model035_256/all"
 model_name="mobilenet_v2_035_sgmt"
 
 #dataset_name="coco2017_saliency_ext"
 #tfrecord_dir="coco2017/saliency_ext/tfrecord"
 #dataset_name="owlii_studio"
 #tfrecord_dir="owlii_studio/tfrecord"
-dataset_name="pascal_voc_saliency"
-tfrecord_dir="pascal_voc_saliency/tfrecord"
+dataset_name="LV-instance-simple"
+tfrecord_dir="LV-instance1/tfrecord_simple"
 
 ###################################
-HOME="/home/corp.owlii.com/yi.xu"
-SLIM="${HOME}/tensorflow/models/research/slim"
-WORKSPACE="${HOME}/workspace/models/seg"
-DATASET_DIR="${HOME}/data/${tfrecord_dir}"
+HOME="/home/corp.owlii.com/xiufeng.huang"
+SLIM="${HOME}/models/research/slim"
+WORKSPACE="${HOME}/models/workspace/seg"
+DATASET_DIR="${HOME}/models/workspace/seg/${tfrecord_dir}"
 VAL_DIR="${WORKSPACE}/${log_dir}"
+PYTHONNPATH="${PYTHONPATH}:${WORKSPACE}"
+
 
 # Run evaluation.
 python eval_sgmt.py \
   --checkpoint_path=${VAL_DIR} \
   --eval_dir=${VAL_DIR} \
   --dataset_name=${dataset_name} \
-  --dataset_split_name=val \
+  --dataset_split_name=LV-test \
   --dataset_dir=${DATASET_DIR} \
   --model_name=${model_name} \
   --batch_size=1 \
@@ -33,5 +35,9 @@ python eval_sgmt.py \
   --max_resize_value=512 \
   --use_decoder=True \
   --max_number_of_evaluations 0  # 0 for infinite loop
+  --instance_seg=True \
+  --inner_extension_ratio=-0.1 \
+  --outer_extension_ratio=0.2 \
+  --filling=resize  # central_padding, resize
 
 

@@ -92,8 +92,8 @@ def _set_arg_scope_defaults(defaults):
 @slim.add_arg_scope
 def depth_multiplier(output_params,
                      multiplier,
-                     divisible_by=8,
-                     min_depth=8,
+                     divisible_by=2,
+                     min_depth=2,
                      **unused_kwargs):
   if 'num_outputs' not in output_params:
     return
@@ -208,6 +208,7 @@ def mobilenet_base(  # pylint: disable=invalid-name
     # any custom overrides set in mobilenet.
     end_points = {}
     scopes = {}
+
     for i, opdef in enumerate(conv_defs['spec']):
 #      print('####################: ', opdef)
       params = dict(opdef.params)
@@ -308,14 +309,14 @@ def decoder(net_outputs, decoder_inputs, end_points,
                normalizer_params={'center': True, 'scale': True,
                                   'is_training': is_training},
                biases_initializer=init_ops.zeros_initializer())
-
+  temp_skip_res = [[32, 32], [64, 64], [128, 128], [256, 256], [512, 512]]
   with tf.variable_scope(scope):
     output = net_outputs
     for i in range(num_skips):
       bridge = decoder_inputs[i]
       if bridge_ch_nums[i] > 0:
-        scope_name = 'skip_' + str(i+1) + '_' + str(skip_res[i][0]) + 'x' + \
-                         str(skip_res[i][1])  + '_bridge'
+        scope_name = 'skip_' + str(i+1) + '_' + str(temp_skip_res[i][0]) + 'x' + \
+                         str(temp_skip_res[i][1])  + '_bridge'
         bridge = bridge_conv(bridge,
                    bridge_ch_nums[i],
                    scope=scope_name)
@@ -324,8 +325,8 @@ def decoder(net_outputs, decoder_inputs, end_points,
                    output, skip_res[i])
       output = tf.concat([bridge, output], 3)
       if output_ch_nums[i] > 0:
-        scope_name = 'skip_' + str(i+1) + '_' + str(skip_res[i][0]) + 'x' + \
-                         str(skip_res[i][1])  + '_output'
+        scope_name = 'skip_' + str(i+1) + '_' + str(temp_skip_res[i][0]) + 'x' + \
+                         str(temp_skip_res[i][1])  + '_output'
         output = output_conv(output, output_ch_nums[i], scope=scope_name)
         end_points[scope_name] = output
 
@@ -398,13 +399,15 @@ def mobilenet(inputs,
 
     use_decoder = FLAGS.use_decoder
     if use_decoder:
-      num_skips = 5
+      num_skips = 4
       decoder_inputs = [end_points['layer_14'],
                         end_points['layer_7'],
                         end_points['layer_4'],
                         end_points['layer_2'],
                         inputs]
+      #train_size = FLAGS.train_crop_size
       skip_res = [[32, 32], [64, 64], [128, 128], [256, 256], [512, 512]]
+      #skip_res = [[train_size[0]//16, train_size[1]//16], [train_size[0]//8, train_size[1]//8], [train_size[0]//4, train_size[1]//4], [train_size[0]//2, train_size[1]//2], [train_size[0],train_size[1]]]
       bridge_ch_nums=[8, 8, 8, 8, 4]
       output_ch_nums=[8, 8, 8, 2, 2]
       net = decoder(net, decoder_inputs, end_points,
@@ -438,6 +441,8 @@ def mobilenet(inputs,
 
       # since it is now 7 x 7, the squeeze here should become useless
 #      logits = tf.squeeze(logits, [1, 2])
+      logits = tf.image.resize_bilinear(logits, [512,512])
+      
       logits = tf.identity(logits, name='output')
 
     end_points['Logits'] = logits

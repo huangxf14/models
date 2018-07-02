@@ -22,13 +22,39 @@ import functools
 import tensorflow as tf
 
 from local_net_fn import mobilenet_v2_035_sgmt
-
+from local_net_fn import mobilenet_v2_1_sgmt
+from local_net_fn import mobilenet_v2_035_1024_sgmt
+from local_net_fn import mobilenet_v2_035_2_sgmt
+from local_net_fn import mobilenet_v2_035_instance
+from local_net_fn import mobilenet_v2_035_instance_2
+from local_net_fn import mobilenet_v2_035_instance_3
+from local_net_fn import mobilenet_v2_035_64_instance
+from local_net_fn import mobilenet_v2_075_sgmt
+from local_net_fn import mobilenet_v2_075_instance
 slim = tf.contrib.slim
 
 networks_map = {'mobilenet_v2_035_sgmt': mobilenet_v2_035_sgmt.mobilenet,
+                'mobilenet_v2_1_sgmt': mobilenet_v2_1_sgmt.mobilenet,
+                'mobilenet_v2_035_1024_sgmt': mobilenet_v2_035_1024_sgmt.mobilenet,
+                'mobilenet_v2_035_2_sgmt': mobilenet_v2_035_2_sgmt.mobilenet,
+                'mobilenet_v2_035_instance': mobilenet_v2_035_instance.mobilenet,
+                'mobilenet_v2_035_instance_2': mobilenet_v2_035_instance_2.mobilenet,
+                'mobilenet_v2_035_instance_3': mobilenet_v2_035_instance_3.mobilenet,
+                'mobilenet_v2_035_64_instance': mobilenet_v2_035_64_instance.mobilenet,
+                'mobilenet_v2_075_sgmt': mobilenet_v2_075_sgmt.mobilenet,
+                'mobilenet_v2_075_instance': mobilenet_v2_075_instance.mobilenet,
                }
 
 arg_scopes_map = {'mobilenet_v2_035_sgmt': mobilenet_v2_035_sgmt.training_scope,
+                  'mobilenet_v2_1_sgmt': mobilenet_v2_1_sgmt.training_scope,
+                  'mobilenet_v2_035_1024_sgmt': mobilenet_v2_035_1024_sgmt.training_scope,
+                  'mobilenet_v2_035_2_sgmt': mobilenet_v2_035_2_sgmt.training_scope,
+                  'mobilenet_v2_035_instance': mobilenet_v2_035_instance.training_scope,
+                  'mobilenet_v2_035_instance_2': mobilenet_v2_035_instance_2.training_scope,
+                  'mobilenet_v2_035_instance_3': mobilenet_v2_035_instance_3.training_scope,
+                  'mobilenet_v2_035_64_instance': mobilenet_v2_035_64_instance.training_scope,
+                  'mobilenet_v2_075_sgmt': mobilenet_v2_075_sgmt.training_scope,
+                  'mobilenet_v2_075_instance': mobilenet_v2_075_instance.training_scope,
                  }
 
 

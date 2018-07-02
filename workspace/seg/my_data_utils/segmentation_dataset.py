@@ -123,6 +123,42 @@ _PASCAL_VOC_SALIENCY = DatasetDescriptor(
     ignore_label=255,
 )
 
+
+_TEST_INFORMATION = DatasetDescriptor(
+    splits_to_sizes = {
+        'train': 1,
+        'val': 1,
+    },
+    num_classes=2,
+    ignore_label=255,
+)
+
+_COCO_INSTANCE_INFORMATION = DatasetDescriptor(
+    splits_to_sizes = {
+        'coco_train_instance':209988,
+        'coco_test_instance':52477,
+    },
+    num_classes=2,
+    ignore_label=255,
+)
+
+_COCO_INSTANCE_SIMPLE_INFORMATION = DatasetDescriptor(
+    splits_to_sizes = {
+        'coco_train_instance':121759,
+        'coco_test_instance':6403,
+    },
+    num_classes=2,
+    ignore_label=255,
+)
+
+_LV_INSTANCE_SIMPLE_INFORMATION = DatasetDescriptor(
+    splits_to_sizes = {
+        'LV-train':14226,
+        'LV-test':736,
+    },
+    num_classes=2,
+    ignore_label=255,
+)
 _DATASETS_INFORMATION = {
     'cityscapes': _CITYSCAPES_INFORMATION,
     'pascal_voc_seg': _PASCAL_VOC_SEG_INFORMATION,
@@ -134,6 +170,10 @@ _DATASETS_INFORMATION = {
     'coco2017_human': _COCO2017_HUMAN,
     'coco2017_saliency': _COCO2017_SALIENCY,
     'coco2017_saliency_ext': _COCO2017_SALIENCY_EXT,
+    'test': _TEST_INFORMATION,
+    'coco-instance': _COCO_INSTANCE_INFORMATION,
+    'coco-instance-simple': _COCO_INSTANCE_SIMPLE_INFORMATION,
+    'LV-instance-simple': _LV_INSTANCE_SIMPLE_INFORMATION
 }
 
 # Default file pattern of TFRecord of TensorFlow Example.
