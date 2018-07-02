@@ -1,0 +1,66 @@
+close all;
+clear;
+clc;
+
+% train = fopen('train.txt','w');
+% val = fopen('val.txt','w');
+% for i = 1 : 4500
+%     i4 = sprintf('%04d', i);
+%     fprintf(train,'%s\n',i4);
+% end;
+% 
+% for i = 4501 : 4980
+%     i4 = sprintf('%04d', i);
+%     fprintf(val,'%s\n',i4);
+% end;
+
+for i = 1 : 4980
+    i4 = sprintf('%04d', i);
+    img = imread(['images/', i4, '.jpg']);
+%     imwrite(img, [i4, '.jpg']);
+    imgshape = size(img);
+    fg = logical(zeros(imgshape(1), imgshape(2)));
+    invalid = logical(zeros(imgshape(1), imgshape(2)));
+    annos = dir(['annotations/', i4, '*.png']);
+    for j = 1 : length(annos)
+        anno_name = annos(j).name;
+        msk = imread(['annotations/', anno_name]);
+        
+        ori = msk > 0;
+%         figure;
+%         imshow(uint8(ori) * 255);
+        fg = fg | ori;
+        
+        se = strel('disk', 3);
+        extra = imdilate(ori, se);
+        se = strel('disk', 3);
+        extra = imerode(extra, se);
+        extra = logical(extra > ori);
+%         figure;
+%         imshow(uint8(extra) * 255);
+        invalid = invalid | extra;
+    end;
+    
+    out_mask = uint8(zeros(imgshape(1), imgshape(2))); 
+    for k = 1 : imgshape(1)
+        for l = 1 : imgshape(2)
+            if invalid(k, l)
+                out_mask(k, l) = 255;
+            else
+                if fg(k, l)
+                    out_mask(k, l) = 1;
+                end;
+            end;
+        end;
+    end;
+%     figure;
+%     imshow(out_mask * 255);
+    imwrite(out_mask, ['human_masks/', i4, '.png']);
+end;
+
+
+
+
+
+
+
