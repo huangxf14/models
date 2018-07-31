@@ -92,6 +92,9 @@ HEIGHT = 'height'
 WIDTH = 'width'
 IMAGE_NAME = 'image_name'
 LABEL = 'label'
+LAST_MASK = 'last_mask'
+FIRST_IMAGE = 'first_image'
+FIRST_MASK = 'first_mask'
 ORIGINAL_IMAGE = 'original_image'
 
 # Test set name.
