@@ -96,6 +96,7 @@ LAST_MASK = 'last_mask'
 FIRST_IMAGE = 'first_image'
 FIRST_MASK = 'first_mask'
 ORIGINAL_IMAGE = 'original_image'
+NUM = 'num'
 
 # Test set name.
 TEST_SET = 'test'
