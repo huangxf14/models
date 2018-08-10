@@ -144,7 +144,7 @@ tf.app.flags.DEFINE_float(
     'learning_rate_decay_factor', 0.94, 'Learning rate decay factor.')
 
 tf.app.flags.DEFINE_float(
-    'num_epochs_per_decay', 2.0,
+    'num_epochs_per_decay', 0.2,
     'Number of epochs after which learning rate decays.')
 
 tf.app.flags.DEFINE_bool(
@@ -448,7 +448,7 @@ def main(_):
     ######################
 #    dataset = dataset_factory.get_dataset(
 #        FLAGS.dataset_name, FLAGS.dataset_split_name, FLAGS.dataset_dir)
-    dataset = segmentation_dataset.get_video_dataset(
+    dataset = segmentation_dataset.get_video10_dataset(
         FLAGS.dataset_name, FLAGS.dataset_split_name, dataset_dir=FLAGS.dataset_dir)
     # dataset.num_classes = 21
 

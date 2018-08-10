@@ -35,7 +35,7 @@ import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_enum('image_format', 'png', ['jpg', 'jpeg', 'png'],
+tf.app.flags.DEFINE_enum('image_format', 'jpg', ['jpg', 'jpeg', 'png'],
                          'Image format.')
 
 tf.app.flags.DEFINE_enum('label_format', 'png', ['png'],
@@ -216,3 +216,69 @@ def video_seg_to_tfexample(image_data, filename, height, width, seg_data, image_
     }),
     
   )
+
+def video10_seg_to_tfexample(image_data, filename, height, width, seg_data, lastmask_data, firstimage_data, firstmask_data):
+  """Converts one image/segmentation pair to tf example.
+
+  Args:
+    image_data: string of image data.
+    filename: image filename.
+    height: image height.
+    width: image width.
+    seg_data: string of semantic segmentation data.
+
+  Returns:
+    tf example of one image/segmentation pair.
+  """
+  return tf.train.Example(features=tf.train.Features(feature={
+      'image/encoded0': _bytes_list_feature(image_data[0]),
+      'image/encoded1': _bytes_list_feature(image_data[1]),
+      'image/encoded2': _bytes_list_feature(image_data[2]),
+      'image/encoded3': _bytes_list_feature(image_data[3]),
+      'image/encoded4': _bytes_list_feature(image_data[4]),
+      'image/encoded5': _bytes_list_feature(image_data[5]),
+      'image/encoded6': _bytes_list_feature(image_data[6]),
+      'image/encoded7': _bytes_list_feature(image_data[7]),
+      'image/encoded8': _bytes_list_feature(image_data[8]),
+      'image/encoded9': _bytes_list_feature(image_data[9]),
+      'image/filename': _bytes_list_feature(filename),
+      'image/format': _bytes_list_feature(
+          _IMAGE_FORMAT_MAP[FLAGS.image_format]),
+      'image/height': _int64_list_feature(height),
+      'image/width': _int64_list_feature(width),
+      'image/channels': _int64_list_feature(3),
+      'image/segmentation/class/encoded0': (
+          _bytes_list_feature(seg_data[0])),
+      'image/segmentation/class/encoded1': (
+          _bytes_list_feature(seg_data[1])),
+      'image/segmentation/class/encoded2': (
+          _bytes_list_feature(seg_data[2])),
+      'image/segmentation/class/encoded3': (
+          _bytes_list_feature(seg_data[3])),
+      'image/segmentation/class/encoded4': (
+          _bytes_list_feature(seg_data[4])),
+      'image/segmentation/class/encoded5': (
+          _bytes_list_feature(seg_data[5])),
+      'image/segmentation/class/encoded6': (
+          _bytes_list_feature(seg_data[6])),
+      'image/segmentation/class/encoded7': (
+          _bytes_list_feature(seg_data[7])),
+      'image/segmentation/class/encoded8': (
+          _bytes_list_feature(seg_data[8])),
+      'image/segmentation/class/encoded9': (
+          _bytes_list_feature(seg_data[9])),
+      'image/segmentation/class/format': _bytes_list_feature(
+          FLAGS.label_format),
+      'image/lastmask/encoded': (
+          _bytes_list_feature(lastmask_data)),
+      'image/lastmask/format': _bytes_list_feature(
+          FLAGS.label_format),
+      'image/firstimage/encoded': (
+          _bytes_list_feature(firstimage_data)),
+      'image/firstimage/format': _bytes_list_feature(
+          _IMAGE_FORMAT_MAP[FLAGS.image_format]),
+      'image/firstmask/encoded': (
+          _bytes_list_feature(firstmask_data)),
+      'image/firstmask/format': _bytes_list_feature(
+          FLAGS.label_format),
+  }))

@@ -1,7 +1,5 @@
-#!/bin/bash
 
-
-model_name="mobilenet_v2_035_video"
+model_name="mobilenet_v2_035_video_double10"
 log_dir="dec1/train"
 
 #dataset_name="coco2017_saliency_ext"
@@ -11,17 +9,17 @@ log_dir="dec1/train"
 dataset_name="DAVIS-video10"
 tfrecord_dir="RGMP/tfrecord-video10"
 
-ckpt="model.ckpt-250000"
-checkpoint_exclude_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
+ckpt="model.ckpt-51345"
+#checkpoint_exclude_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
 trainable_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
 
 num_clones_new=1
-batch_size_new=3    # 192 * 2  
-train_steps_new=5000  # 10000 steps, about 8 epoches
+batch_size_new=15    # 192 * 2  
+train_steps_new=1 #0000  # 10000 steps, about 8 epoches
 second_stage_dir="all"
 num_clones=1
-batch_size=2
-train_steps=200000     # 100000 steps, about 60 epoches
+batch_size=10
+train_steps=250000     # 100000 steps, about 60 epoches
 lr_decay_factor=0.87
 
 ###########################################
@@ -29,8 +27,8 @@ HOME="/home/corp.owlii.com/xiufeng.huang"
 SLIM="${HOME}/models/research/slim"
 WORKSPACE="${HOME}/models/workspace/seg"
 DATASET_DIR="${HOME}/models/workspace/seg/${tfrecord_dir}"
-INIT_CHECKPOINT="${HOME}/models/workspace/seg/coco-instance/model035_256/all/${ckpt}"
-TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelvideo_test"
+INIT_CHECKPOINT="${HOME}/models/workspace/seg/RGMP/modelvideo_testnet10_gtandzero/all/${ckpt}"
+TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelvideo_testnet2_andzero"
 #mkdir -p ${TRAIN_DIR}
 
 ##### Start training #####
@@ -43,7 +41,6 @@ python train_video_sgmt.py \
   --model_name=${model_name} \
   --checkpoint_path=${INIT_CHECKPOINT} \
   --checkpoint_exclude_scopes=${checkpoint_exclude_scopes} \
-  --trainable_scopes=${trainable_scopes} \
   --max_number_of_steps=${train_steps_new} \
   --batch_size=${batch_size_new} \
   --min_scale_factor=0.5 \
@@ -59,7 +56,10 @@ python train_video_sgmt.py \
   --optimizer=rmsprop \
   --weight_decay=0.00004 \
   --num_clones=${num_clones_new} \
-  --use_decoder=True
+  --use_decoder=True \
+  --num_epochs_per_decay=1
+
+  # --trainable_scopes=${trainable_scopes} \
 
 # Run evaluation.
 python eval_sgmt.py \
@@ -100,7 +100,8 @@ python train_video_sgmt.py \
   --optimizer=rmsprop \
   --weight_decay=0.00004 \
   --num_clones=${num_clones} \
-  --use_decoder=True
+  --num_epochs_per_decay=1 \
+  --use_decoder=True  
 
 # Run evaluation.
 python eval_sgmt.py \

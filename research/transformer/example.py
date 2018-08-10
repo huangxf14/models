@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 from scipy import ndimage
+from scipy.misc import imsave
 import tensorflow as tf
 from spatial_transformer import transformer
 import numpy as np
@@ -42,7 +43,9 @@ with tf.variable_scope('spatial_transformer_0'):
 
     # %% Create a fully-connected layer with 6 output nodes
     n_fc = 6
-    W_fc1 = tf.Variable(tf.zeros([1200 * 1600 * 3, n_fc]), name='W_fc1')
+    
+    # W_fc1 = tf.Variable(tf.zeros([1200 * 1600 * 3, n_fc]), name='W_fc1')
+    W_fc1 = tf.Variable(tf.random_uniform((1200 * 1600 * 3, n_fc), minval=-1,maxval=1,dtype=tf.float32), name='W_fc1')
 
     # %% Zoom into the image
     initial = np.array([[0.5, 0, 0], [0, 0.5, 0]])
@@ -50,12 +53,14 @@ with tf.variable_scope('spatial_transformer_0'):
     initial = initial.flatten()
 
     b_fc1 = tf.Variable(initial_value=initial, name='b_fc1')
-    h_fc1 = tf.matmul(tf.zeros([num_batch, 1200 * 1600 * 3]), W_fc1) + b_fc1
+    # h_fc1 = tf.matmul(tf.zeros([num_batch, 1200 * 1600 * 3]), W_fc1) + b_fc1
+    h_fc1 = tf.matmul(tf.random_uniform((num_batch, 1200 * 1600 * 3), minval=-1,maxval=1,dtype=tf.float32), W_fc1) + b_fc1
     h_trans = transformer(x, h_fc1, out_size)
 
 # %% Run session
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 y = sess.run(h_trans, feed_dict={x: batch})
+imsave('cat_new.jpg',y[0])
 
 # plt.imshow(y[0])

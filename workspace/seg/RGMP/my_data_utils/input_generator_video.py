@@ -39,12 +39,13 @@ def _get_data(data_provider, dataset_split):
   Raises:
     ValueError: Failed to find label.
   """
-  if common.LABELS_CLASS not in data_provider.list_items():
+  if common.LABELS_CLASS0 not in data_provider.list_items():
     raise ValueError('Failed to find labels.')
 
-  image, height, width, num = data_provider.get(
-      [common.IMAGE, common.HEIGHT, common.WIDTH, common.NUM])
-
+  image0, image1, image2, image3, image4, image5, image6, image7, image8, image9, height, width = data_provider.get(
+      [common.IMAGE0, common.IMAGE1, common.IMAGE2, common.IMAGE3, common.IMAGE4, common.IMAGE5, common.IMAGE6, common.IMAGE7, common.IMAGE8, common.IMAGE9, common.HEIGHT, common.WIDTH])
+  last_mask, first_image, first_mask = data_provider.get(
+      [common.LAST_MASK, common.FIRST_IMAGE, common.FIRST_MASK])
   # Some datasets do not contain image_name.
   if common.IMAGE_NAME in data_provider.list_items():
     image_name, = data_provider.get([common.IMAGE_NAME])
@@ -53,10 +54,18 @@ def _get_data(data_provider, dataset_split):
 
   label = None
   if dataset_split != common.TEST_SET:
-    label, = data_provider.get([common.LABELS_CLASS])
+    label0, label1, label2, label3, label4, label5, label6, label7, label8, label9 = data_provider.get(
+      [common.LABELS_CLASS0, common.LABELS_CLASS1, common.LABELS_CLASS2, common.LABELS_CLASS3, common.LABELS_CLASS4, common.LABELS_CLASS5, common.LABELS_CLASS6, common.LABELS_CLASS7, common.LABELS_CLASS8, common.LABELS_CLASS9])
 
+  image = tf.concat([first_image,first_mask,image0,last_mask,image1,image2,image3,image4,image5,image6,image7,image8,image9],2)
+  label = tf.concat([label0, label1, label2, label3, label4, label5, label6, label7, label8, label9],2)
 
-  return image, label, image_name, height, width, num
+  print('image shape:')
+  print(image.shape)
+  print('label shape:')
+  print(label.shape)
+  
+  return image, label, image_name, height, width
 
 
 def get(dataset,
@@ -74,7 +83,8 @@ def get(dataset,
         is_training=True,
         model_variant=None,
         instance_seg=False,
-        instance_seg_args={}):
+        instance_seg_args={},
+        test=False):
   """Gets the dataset split for semantic segmentation.
   This functions gets the dataset split for semantic segmentation. In
   particular, it is a wrapper of (1) dataset_data_provider which returns the raw
@@ -117,18 +127,26 @@ def get(dataset,
       num_readers=num_readers,
       num_epochs=None if is_training else 1,
       shuffle=is_training)
-  image, label, image_name, height, width, num = _get_data(data_provider,
+  image, label, image_name, height, width = _get_data(data_provider,
                                                       dataset_split)
   if label is not None:
-    if label.shape.ndims == 3:
-      label = tf.expand_dims(label, 3)
-    elif label.shape.ndims == 4 and label.shape.dims[3] == 1:
+    if label.shape.ndims == 3 and label.shape.dims[2] == 10:
       pass
     else:
       raise ValueError('Input label shape must be [height, width], or '
-                       '[height, width, 1].')
+                       '[height, width, 10].')
 
-    label.set_shape([None,None, None, 1])
+    label.set_shape([None, None, 10])
+
+
+  # if test==True:
+  #   sample = {
+  #     common.IMAGE: image,
+  #     common.IMAGE_NAME: image_name,
+  #     common.HEIGHT: height,
+  #     common.WIDTH: width
+  #    }
+  #   return sample
 
   if instance_seg:
     inner_extension_ratio = instance_seg_args['inner_extension_ratio']
@@ -149,7 +167,6 @@ def get(dataset,
     original_image, image, label = input_preprocess_video.preprocess_image_and_label(
         image,
         label,
-        num,
         crop_height=crop_size[0],
         crop_width=crop_size[1],
         min_resize_value=min_resize_value,
@@ -167,8 +184,7 @@ def get(dataset,
       common.IMAGE: image,
       common.IMAGE_NAME: image_name,
       common.HEIGHT: height,
-      common.WIDTH: width,
-      common.NUM: num
+      common.WIDTH: width
   }
   if label is not None:
     sample[common.LABEL] = label
@@ -177,6 +193,8 @@ def get(dataset,
     # Original image is only used during visualization.
     sample[common.ORIGINAL_IMAGE] = original_image,
     num_threads = 1
+
+  
 
   return tf.train.batch(
       sample,

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-model_name="mobilenet_v2_035_video"
+model_name="mobilenet_v2_035_video_testsingle"
 log_dir="dec1/train"
 
 #dataset_name="coco2017_saliency_ext"
@@ -16,11 +16,11 @@ checkpoint_exclude_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,Mobilenet
 trainable_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
 
 num_clones_new=1
-batch_size_new=3    # 192 * 2  
+batch_size_new=30    # 192 * 2  
 train_steps_new=5000  # 10000 steps, about 8 epoches
 second_stage_dir="all"
 num_clones=1
-batch_size=2
+batch_size=20
 train_steps=200000     # 100000 steps, about 60 epoches
 lr_decay_factor=0.87
 
@@ -30,7 +30,7 @@ SLIM="${HOME}/models/research/slim"
 WORKSPACE="${HOME}/models/workspace/seg"
 DATASET_DIR="${HOME}/models/workspace/seg/${tfrecord_dir}"
 INIT_CHECKPOINT="${HOME}/models/workspace/seg/coco-instance/model035_256/all/${ckpt}"
-TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelvideo_test"
+TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelvideo_testsingle"
 #mkdir -p ${TRAIN_DIR}
 
 ##### Start training #####
@@ -59,6 +59,7 @@ python train_video_sgmt.py \
   --optimizer=rmsprop \
   --weight_decay=0.00004 \
   --num_clones=${num_clones_new} \
+  --num_epochs_per_decay=2.0 \
   --use_decoder=True
 
 # Run evaluation.
@@ -100,6 +101,7 @@ python train_video_sgmt.py \
   --optimizer=rmsprop \
   --weight_decay=0.00004 \
   --num_clones=${num_clones} \
+  --num_epochs_per_decay=2.0 \
   --use_decoder=True
 
 # Run evaluation.

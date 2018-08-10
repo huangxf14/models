@@ -40,7 +40,7 @@ tf.app.flags.DEFINE_string(
     'Folder containing lists for training and validation')
 tf.app.flags.DEFINE_string(
     'output_dir',
-    './tfrecord-video',
+    './tfrecord-video10',
     'Path to save converted SSTable of TensorFlow examples.')
 tf.app.flags.DEFINE_string(
     'img_dir',
@@ -69,6 +69,7 @@ _NUM_SHARDS = FLAGS.num_shards
 
 
 def _convert_dataset(dataset_split):
+  total_cnt = 0
   dataset = os.path.basename(dataset_split)[:-4]
   sys.stdout.write('Processing ' + dataset)
   filenames = [x.strip('\n') for x in open(dataset_split, 'r')]
@@ -105,7 +106,6 @@ def _convert_dataset(dataset_split):
           if file[-3:] != 'jpg':
             continue
           image_filename = FLAGS.img_dir + filedirname + '/' + file
-          print(image_filename)
           image_data = tf.gfile.FastGFile(image_filename, 'rb').read()
           # tf.gfile.FastGFile::read(): Returns the contents of a file as a string.
           height, width = image_reader.read_image_dims(image_data)
@@ -130,17 +130,24 @@ def _convert_dataset(dataset_split):
         if len(imglist) != len(seglist):
             raise RuntimeError('List length mismatched between image and label.')
           # Convert to tf example.
+        print()
         print(len(imglist))
-        example = build_data.video_seg_to_tfexample(
-            imglist, filenames[i], height, width, seglist, len(imglist))
-        tfrecord_writer.write(example.SerializeToString())
+        total_cnt += len(imglist) - 10
+        print(total_cnt)
+        for img_cnt in range(1,len(imglist)-9):
+          example = build_data.video10_seg_to_tfexample(
+              imglist[img_cnt:img_cnt+10], filenames[i], height, width, seglist[img_cnt:img_cnt + 10], seglist[img_cnt-1], imglist[0], seglist[0])
+          tfrecord_writer.write(example.SerializeToString())
     sys.stdout.write('\n')
     sys.stdout.flush()
+  return total_cnt
 
 def main(unused_argv):
-  dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, 'test.txt'))
-  for dataset_split in dataset_splits:
-    _convert_dataset(dataset_split)
+  dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, '*human*.txt'))
+  # for dataset_split in dataset_splits:
+  #   _convert_dataset(dataset_split)
+  cnt_list = {dataset_split:_convert_dataset(dataset_split) for dataset_split in dataset_splits}
+  print(cnt_list)
 
 if __name__ == '__main__':
   tf.app.run()

@@ -48,7 +48,6 @@ def random_combination(image,label,num,max_num=10):
 
 def preprocess_image_and_label(image,
                                label,
-                               num,
                                crop_height,
                                crop_width,
                                min_resize_value=None,
@@ -97,7 +96,7 @@ def preprocess_image_and_label(image,
                        'supported model variants.')
 
   # Keep reference to original image.
-  image, label = random_combination(image,label,num)
+  # image, label = random_combination(image,label,num)
 
   original_image = image
 
@@ -124,7 +123,7 @@ def preprocess_image_and_label(image,
       min_scale_factor, max_scale_factor, scale_factor_step_size)
   processed_image, label = preprocess_utils.randomly_scale_image_and_label(
       processed_image, label, scale)
-  processed_image.set_shape([None, None, 44])
+  processed_image.set_shape([None, None, 35])
 
   # Pad image and label to have dimensions >= [crop_height, crop_width]
   image_shape = tf.shape(processed_image)
@@ -136,7 +135,7 @@ def preprocess_image_and_label(image,
 
   # Pad image with mean pixel value.
   mean_pixel = tf.reshape(
-      [127.5, 127.5, 127.5, 0]*11, [1, 1, 44])
+      [127.5, 127.5, 127.5, 0]*2+[127.5, 127.5, 127.5]*9, [1, 1, 35])
   processed_image = preprocess_utils.pad_to_bounding_box(
       processed_image, 0, 0, target_height, target_width, mean_pixel)
 
@@ -149,7 +148,7 @@ def preprocess_image_and_label(image,
     processed_image, label = preprocess_utils.random_crop(
         [processed_image, label], crop_height, crop_width)
 
-  processed_image.set_shape([crop_height, crop_width, 44])
+  processed_image.set_shape([crop_height, crop_width, 35])
 
   if label is not None:
     label.set_shape([crop_height, crop_width, 10])

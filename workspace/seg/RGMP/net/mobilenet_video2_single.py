@@ -480,8 +480,9 @@ def mobilenet(inputs,
         # net, end_points = mobilenet_base(inputs[:,:,:,cnt*4+4:cnt*4+8], scope=scope1, **mobilenet_args)
         net, end_points = mobilenet_base(inputs[:,:,:,:4], scope=scope1, **mobilenet_args)
       else:
+        heatmap = tf.stop_gradient(heatmap)
         net, end_points = mobilenet_base(tf.concat([inputs[:,:,:,cnt*4+4:cnt*4+7],heatmap[:,:,:,1:2]],3), scope=scope1, **mobilenet_args)
-
+# 
     with tf.variable_scope(scope, reuse=True) as scope2:  
       if first is None:
         # net2, end_points2 = mobilenet_base(inputs[:,:,:,:4], scope=scope2, **mobilenet_args)

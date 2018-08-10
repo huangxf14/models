@@ -28,6 +28,13 @@ from net import mobilenet_v2_test1
 from net import mobilenet_v2_test2
 from net import mobilenet_v2_035_video
 from net import mobilenet_v2_035_video_single
+from net import mobilenet_v2_035_video_testsingle
+from net import mobilenet_v2_035_video2
+from net import mobilenet_v2_035_video2_single
+from net import mobilenet_v2_035_video_single10
+from net import mobilenet_v2_035_video_single10_gt
+from net import mobilenet_v2_035_video_single10_gtandzero
+from net import mobilenet_v2_035_video_double10
 slim = tf.contrib.slim
 
 networks_map = {
@@ -38,6 +45,13 @@ networks_map = {
                 'mobilenet_v2_test2': mobilenet_v2_test2.mobilenet,
                 'mobilenet_v2_035_video': mobilenet_v2_035_video.mobilenet,
                 'mobilenet_v2_035_video_single': mobilenet_v2_035_video_single.mobilenet,
+                'mobilenet_v2_035_video_testsingle': mobilenet_v2_035_video_testsingle.mobilenet,
+                'mobilenet_v2_035_video2': mobilenet_v2_035_video2.mobilenet,
+                'mobilenet_v2_035_video2_single': mobilenet_v2_035_video2_single.mobilenet,
+                'mobilenet_v2_035_video_single10': mobilenet_v2_035_video_single10.mobilenet,
+                'mobilenet_v2_035_video_single10_gt': mobilenet_v2_035_video_single10_gt.mobilenet,
+                'mobilenet_v2_035_video_single10_gtandzero': mobilenet_v2_035_video_single10_gtandzero.mobilenet,
+                'mobilenet_v2_035_video_double10': mobilenet_v2_035_video_double10.mobilenet,
                }
 
 arg_scopes_map = {
@@ -48,6 +62,13 @@ arg_scopes_map = {
                   'mobilenet_v2_test2': mobilenet_v2_test2.training_scope,
                   'mobilenet_v2_035_video': mobilenet_v2_035_video.training_scope,
                   'mobilenet_v2_035_video_single': mobilenet_v2_035_video_single.training_scope,
+                  'mobilenet_v2_035_video_testsingle': mobilenet_v2_035_video_testsingle.training_scope,
+                  'mobilenet_v2_035_video2': mobilenet_v2_035_video2.training_scope,
+                  'mobilenet_v2_035_video2_single': mobilenet_v2_035_video2_single.training_scope,
+                  'mobilenet_v2_035_video_single10': mobilenet_v2_035_video_single10.training_scope,
+                  'mobilenet_v2_035_video_single10_gt': mobilenet_v2_035_video_single10_gt.training_scope,
+                  'mobilenet_v2_035_video_single10_gtandzero': mobilenet_v2_035_video_single10_gtandzero.training_scope,
+                  'mobilenet_v2_035_video_double10': mobilenet_v2_035_video_double10.training_scope,
                  }
 
 

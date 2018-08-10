@@ -144,7 +144,7 @@ tf.app.flags.DEFINE_float(
     'learning_rate_decay_factor', 0.94, 'Learning rate decay factor.')
 
 tf.app.flags.DEFINE_float(
-    'num_epochs_per_decay', 2.0,
+    'num_epochs_per_decay', 0.2,
     'Number of epochs after which learning rate decays.')
 
 tf.app.flags.DEFINE_bool(
@@ -530,34 +530,36 @@ def main(_):
       labels = samples[common.LABEL]
 
       # make predictions!
-      logits, end_points = network_fn(images)
+      logits_list, end_points = network_fn(images)
 
       print('images.shape: ', images.shape)
       print('labels.shape: ', labels.shape)
-      print('logits.shape: ', logits.shape)
+      print('logits.shape: ', logits_list[0].shape)
 
-      # define loss
-      logits = tf.image.resize_bilinear(
-          logits, tf.shape(labels)[1:3], align_corners=True)
+      for cnt in range(len(logits_list)):
+        logits_list[cnt] = tf.image.resize_bilinear(
+            logits_list[cnt], tf.shape(labels)[1:3], align_corners=True)
 
-      print('upsampled logits shape: ', logits.shape)
+        print('upsampled logits shape: ', logits_list[cnt].shape)
 
-      scaled_labels = labels
-      scaled_labels = tf.reshape(scaled_labels, shape=[-1])
-      ignore_label = dataset.ignore_label
-      loss_weight = 1.0
-      not_ignore_mask = tf.to_float(tf.not_equal(scaled_labels,
-                                                 ignore_label)) * loss_weight
-      one_hot_labels = slim.one_hot_encoding(
-          scaled_labels, num_classes, on_value=1.0, off_value=0.0)
+        scaled_labels = labels
+        if scaled_labels.shape.ndims == 3:
+          scaled_labels = tf.expand_dims(scaled_labels, 3)
+        scaled_labels = tf.reshape(scaled_labels, shape=[-1])
+        ignore_label = dataset.ignore_label
+        loss_weight = 0.1
+        not_ignore_mask = tf.to_float(tf.not_equal(scaled_labels,
+                                                   ignore_label)) * loss_weight
+        one_hot_labels = slim.one_hot_encoding(
+            scaled_labels, num_classes, on_value=1.0, off_value=0.0)
 
-      print('one_hot_labels.shape: ', one_hot_labels.shape)
+        print('one_hot_labels.shape: ', one_hot_labels.shape)
 
-      tf.losses.softmax_cross_entropy(
-           one_hot_labels,
-           tf.reshape(logits, shape=[-1, num_classes]),
-           weights=not_ignore_mask,
-           scope=None)  # or scope = loss_scope = 'semantic'? I don't know.
+        tf.losses.softmax_cross_entropy(
+             one_hot_labels,
+             tf.reshape(logits_list[cnt], shape=[-1, num_classes]),
+             weights=not_ignore_mask,
+             scope=None)  # or scope = loss_scope = 'semantic'? I don't know.
 
       return end_points
 

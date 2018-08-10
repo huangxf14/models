@@ -171,6 +171,26 @@ _DAVIS_INFORMATION = DatasetDescriptor(
     ignore_label=255,
 )
 
+_DAVIS_VIDEO_INFORMATION = DatasetDescriptor(
+    splits_to_sizes = {
+        'train-human':76,
+        'val-human':25,
+        'val-human-2016':11,
+        'test':1,
+    },
+    num_classes=2,
+    ignore_label=255,
+)
+
+_DAVIS_VIDEO10_INFORMATION = DatasetDescriptor(
+    splits_to_sizes = {
+        'train-human':6327,
+        'val-human':1371,
+        'val-human-2016':705,
+    },
+    num_classes=2,
+    ignore_label=255,
+)
 
 _DATASETS_INFORMATION = {
     'cityscapes': _CITYSCAPES_INFORMATION,
@@ -187,7 +207,9 @@ _DATASETS_INFORMATION = {
     'coco-instance': _COCO_INSTANCE_INFORMATION,
     'coco-instance-simple': _COCO_INSTANCE_SIMPLE_INFORMATION,
     'LV-instance-simple': _LV_INSTANCE_SIMPLE_INFORMATION,
-    'DAVIS':_DAVIS_INFORMATION
+    'DAVIS':_DAVIS_INFORMATION,
+    'DAVIS-video':_DAVIS_VIDEO_INFORMATION,
+    'DAVIS-video10':_DAVIS_VIDEO10_INFORMATION,
 }
 
 # Default file pattern of TFRecord of TensorFlow Example.
@@ -372,6 +394,214 @@ def get_video_dataset(dataset_name, split_name, dataset_dir):
 
   decoder = tfseqexample_decoder.TFSeqExampleDecoder(
       keys_to_context_features, keys_to_sequence_features, items_to_handlers, items_to_handlers_list)
+
+  return dataset.Dataset(
+      data_sources=file_pattern,
+      reader=tf.TFRecordReader,
+      decoder=decoder,
+      num_samples=splits_to_sizes[split_name],
+      items_to_descriptions=_ITEMS_TO_DESCRIPTIONS,
+      ignore_label=ignore_label,
+      num_classes=num_classes,
+      name=dataset_name,
+      multi_label=True)
+
+def get_video10_dataset(dataset_name, split_name, dataset_dir):
+  """Gets an instance of slim Dataset.
+
+  Args:
+    dataset_name: Dataset name.
+    split_name: A train/val Split name.
+    dataset_dir: The directory of the dataset sources.
+
+  Returns:
+    An instance of slim Dataset.
+
+  Raises:
+    ValueError: if the dataset_name or split_name is not recognized.
+  """
+  if dataset_name not in _DATASETS_INFORMATION:
+    raise ValueError('The specified dataset is not supported yet.')
+
+  splits_to_sizes = _DATASETS_INFORMATION[dataset_name].splits_to_sizes
+
+  if split_name not in splits_to_sizes:
+    raise ValueError('data split name %s not recognized' % split_name)
+
+  # Prepare the variables for different datasets.
+  num_classes = _DATASETS_INFORMATION[dataset_name].num_classes
+  ignore_label = _DATASETS_INFORMATION[dataset_name].ignore_label
+
+  file_pattern = _FILE_PATTERN
+  file_pattern = os.path.join(dataset_dir, file_pattern % split_name)
+
+  # Specify how the TF-Examples are decoded.
+  keys_to_features = {
+      'image/encoded0': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/encoded1': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/encoded2': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/encoded3': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/encoded4': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/encoded5': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/encoded6': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/encoded7': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/encoded8': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/encoded9': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/filename': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/format': tf.FixedLenFeature(
+          (), tf.string, default_value='jpg'),
+      'image/height': tf.FixedLenFeature(
+          (), tf.int64, default_value=0),
+      'image/width': tf.FixedLenFeature(
+          (), tf.int64, default_value=0),
+      'image/segmentation/class/encoded0': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/encoded1': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/encoded2': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/encoded3': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/encoded4': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/encoded5': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/encoded6': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/encoded7': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/encoded8': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/encoded9': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/segmentation/class/format': tf.FixedLenFeature(
+          (), tf.string, default_value='png'),
+      'image/lastmask/encoded': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/lastmask/format': tf.FixedLenFeature(
+          (), tf.string, default_value='png'),
+      'image/firstimage/encoded': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/firstimage/format': tf.FixedLenFeature(
+          (), tf.string, default_value='jpg'),
+      'image/firstmask/encoded': tf.FixedLenFeature(
+          (), tf.string, default_value=''),
+      'image/firstmask/format': tf.FixedLenFeature(
+          (), tf.string, default_value='png'),
+  }
+
+  items_to_handlers = {
+      'image0': tfexample_decoder.Image(
+          image_key='image/encoded0',
+          format_key='image/format',
+          channels=3),
+      'image1': tfexample_decoder.Image(
+          image_key='image/encoded1',
+          format_key='image/format',
+          channels=3),
+      'image2': tfexample_decoder.Image(
+          image_key='image/encoded2',
+          format_key='image/format',
+          channels=3),
+      'image3': tfexample_decoder.Image(
+          image_key='image/encoded3',
+          format_key='image/format',
+          channels=3),
+      'image4': tfexample_decoder.Image(
+          image_key='image/encoded4',
+          format_key='image/format',
+          channels=3),
+      'image5': tfexample_decoder.Image(
+          image_key='image/encoded5',
+          format_key='image/format',
+          channels=3),
+      'image6': tfexample_decoder.Image(
+          image_key='image/encoded6',
+          format_key='image/format',
+          channels=3),
+      'image7': tfexample_decoder.Image(
+          image_key='image/encoded7',
+          format_key='image/format',
+          channels=3),
+      'image8': tfexample_decoder.Image(
+          image_key='image/encoded8',
+          format_key='image/format',
+          channels=3),
+      'image9': tfexample_decoder.Image(
+          image_key='image/encoded9',
+          format_key='image/format',
+          channels=3),
+      'image_name': tfexample_decoder.Tensor('image/filename'),
+      'height': tfexample_decoder.Tensor('image/height'),
+      'width': tfexample_decoder.Tensor('image/width'),
+      'labels_class0': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded0',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'labels_class1': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded1',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'labels_class2': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded2',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'labels_class3': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded3',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'labels_class4': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded4',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'labels_class5': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded5',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'labels_class6': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded6',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'labels_class7': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded7',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'labels_class8': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded8',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'labels_class9': tfexample_decoder.Image(
+          image_key='image/segmentation/class/encoded9',
+          format_key='image/segmentation/class/format',
+          channels=1),
+      'last_mask': tfexample_decoder.Image(
+          image_key='image/lastmask/encoded',
+          format_key='image/lastmask/format',
+          channels=1),
+      'first_image': tfexample_decoder.Image(
+          image_key='image/firstimage/encoded',
+          format_key='image/firstimage/format',
+          channels=3),
+      'first_mask': tfexample_decoder.Image(
+          image_key='image/firstmask/encoded',
+          format_key='image/firstmask/format',
+          channels=1),
+
+  }
+
+  decoder = tfexample_decoder.TFExampleDecoder(
+      keys_to_features, items_to_handlers)
 
   return dataset.Dataset(
       data_sources=file_pattern,

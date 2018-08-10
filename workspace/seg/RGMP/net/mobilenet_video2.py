@@ -471,21 +471,20 @@ def mobilenet(inputs,
 
   Logits_list = []
   inputs = tf.identity(inputs, 'input')
-  for cnt in range(1):
+  for cnt in range(10):
     if cnt > 0:
       reuse = True
     
     with tf.variable_scope(scope, reuse=reuse) as scope1:
       if cnt == 0:
-        # net, end_points = mobilenet_base(inputs[:,:,:,cnt*4+4:cnt*4+8], scope=scope1, **mobilenet_args)
-        net, end_points = mobilenet_base(inputs[:,:,:,:4], scope=scope1, **mobilenet_args)
+        net, end_points = mobilenet_base(inputs[:,:,:,cnt*4+4:cnt*4+8], scope=scope1, **mobilenet_args)
       else:
-        net, end_points = mobilenet_base(tf.concat([inputs[:,:,:,cnt*4+4:cnt*4+7],heatmap[:,:,:,1:2]],3), scope=scope1, **mobilenet_args)
+        heatmap = tf.stop_gradient(heatmap)
+        net, end_points = mobilenet_base(tf.concat([inputs[:,:,:,cnt*3+5:cnt*3+8],heatmap[:,:,:,1:2]],3), scope=scope1, **mobilenet_args)
 
     with tf.variable_scope(scope, reuse=True) as scope2:  
       if first is None:
-        # net2, end_points2 = mobilenet_base(inputs[:,:,:,:4], scope=scope2, **mobilenet_args)
-        net2, end_points2 = mobilenet_base(inputs[:,:,:,4:], scope=scope2, **mobilenet_args)
+        net2, end_points2 = mobilenet_base(inputs[:,:,:,:4], scope=scope2, **mobilenet_args)
         first = net2  
       else:
         net2 = tf.identity(first,'first_feature')
@@ -579,7 +578,7 @@ def mobilenet(inputs,
   #    upsampled = tf.identity(upsampled, name='upsampled')
       Logits_list.append(logits)
 
-  return logits, end_points
+  return Logits_list, end_points
 
 
 def global_pool(input_tensor, pool_op=tf.nn.avg_pool):

@@ -465,10 +465,12 @@ def mobilenet(inputs,
 
   with tf.variable_scope(scope, 'Mobilenet', reuse=reuse) as scope:
     inputs = tf.identity(inputs, 'input')
-    net, end_points = mobilenet_base(inputs[:,:,:,:4], scope=scope, **mobilenet_args)
+    # net, end_points = mobilenet_base(inputs[:,:,:,:4], scope=scope, **mobilenet_args)
+    net, end_points = mobilenet_base(tf.concat([inputs[:,:,:,11:14],inputs[:,:,:,7:8]],3), scope=scope, **mobilenet_args)
     scope.reuse_variables()
     if first is None:
-      net2, end_points2 = mobilenet_base(inputs[:,:,:,4:], scope=scope, **mobilenet_args)
+      # net2, end_points2 = mobilenet_base(inputs[:,:,:,4:], scope=scope, **mobilenet_args)
+      net2, end_points2 = mobilenet_base(inputs[:,:,:,:4], scope=scope, **mobilenet_args)
     else:
       net2 = tf.identity(first,'first_feature')
     if base_only:

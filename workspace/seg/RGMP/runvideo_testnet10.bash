@@ -1,27 +1,25 @@
-#!/bin/bash
 
-
-model_name="mobilenet_v2_035_video"
+model_name="mobilenet_v2_035_video_single10"
 log_dir="dec1/train"
 
 #dataset_name="coco2017_saliency_ext"
 #tfrecord_dir="coco2017/saliency_ext/tfrecord"
 #dataset_name="owlii_studio"
 #tfrecord_dir="owlii_studio/tfrecord"
-dataset_name="DAVIS-video10"
-tfrecord_dir="RGMP/tfrecord-video10"
+dataset_name="DAVIS"
+tfrecord_dir="RGMP/tfrecord"
 
-ckpt="model.ckpt-250000"
-checkpoint_exclude_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
+ckpt="model.ckpt-92725"
+#checkpoint_exclude_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
 trainable_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
 
 num_clones_new=1
 batch_size_new=3    # 192 * 2  
-train_steps_new=5000  # 10000 steps, about 8 epoches
+train_steps_new=1 #0000  # 10000 steps, about 8 epoches
 second_stage_dir="all"
 num_clones=1
 batch_size=2
-train_steps=200000     # 100000 steps, about 60 epoches
+train_steps=250000     # 100000 steps, about 60 epoches
 lr_decay_factor=0.87
 
 ###########################################
@@ -29,13 +27,13 @@ HOME="/home/corp.owlii.com/xiufeng.huang"
 SLIM="${HOME}/models/research/slim"
 WORKSPACE="${HOME}/models/workspace/seg"
 DATASET_DIR="${HOME}/models/workspace/seg/${tfrecord_dir}"
-INIT_CHECKPOINT="${HOME}/models/workspace/seg/coco-instance/model035_256/all/${ckpt}"
-TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelvideo_test"
+INIT_CHECKPOINT="${HOME}/models/workspace/seg/RGMP/modelvideo_testnet10_gt/all/${ckpt}"
+TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelvideo_testnet10"
 #mkdir -p ${TRAIN_DIR}
 
 ##### Start training #####
 # Fine-tune only the new layers
-python train_video_sgmt.py \
+python train_sgmt_10.py \
   --train_dir=${TRAIN_DIR} \
   --dataset_name=${dataset_name} \
   --dataset_split_name=train-human \
@@ -43,7 +41,6 @@ python train_video_sgmt.py \
   --model_name=${model_name} \
   --checkpoint_path=${INIT_CHECKPOINT} \
   --checkpoint_exclude_scopes=${checkpoint_exclude_scopes} \
-  --trainable_scopes=${trainable_scopes} \
   --max_number_of_steps=${train_steps_new} \
   --batch_size=${batch_size_new} \
   --min_scale_factor=0.5 \
@@ -61,6 +58,8 @@ python train_video_sgmt.py \
   --num_clones=${num_clones_new} \
   --use_decoder=True
 
+  # --trainable_scopes=${trainable_scopes} \
+
 # Run evaluation.
 python eval_sgmt.py \
   --checkpoint_path=${TRAIN_DIR} \
@@ -77,7 +76,7 @@ python eval_sgmt.py \
 
 
 # Fine-tune all the layers
-python train_video_sgmt.py \
+python train_sgmt_10.py \
   --train_dir=${TRAIN_DIR}/${second_stage_dir} \
   --dataset_name=${dataset_name} \
   --dataset_split_name=train-human \
