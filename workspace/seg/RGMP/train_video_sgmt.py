@@ -14,6 +14,7 @@ import deeplab
 from deeplab import common
 #from deeplab.datasets import segmentation_dataset
 from my_data_utils import input_generator_video
+from my_data_utils import input_generator
 from deeplab.utils import train_utils
 from datasets import dataset_factory
 from deployment import model_deploy
@@ -144,7 +145,7 @@ tf.app.flags.DEFINE_float(
     'learning_rate_decay_factor', 0.94, 'Learning rate decay factor.')
 
 tf.app.flags.DEFINE_float(
-    'num_epochs_per_decay', 0.2,
+    'num_epochs_per_decay', 2.0,
     'Number of epochs after which learning rate decays.')
 
 tf.app.flags.DEFINE_bool(
@@ -284,7 +285,7 @@ def _configure_learning_rate(num_samples_per_epoch, global_step):
     ValueError: if
   """
   decay_steps = int(num_samples_per_epoch / FLAGS.batch_size *
-                    FLAGS.num_epochs_per_decay)
+                    (FLAGS.num_epochs_per_decay/FLAGS.train_length) )
   if FLAGS.sync_replicas:
     decay_steps /= FLAGS.replicas_to_aggregate
 
@@ -448,7 +449,11 @@ def main(_):
     ######################
 #    dataset = dataset_factory.get_dataset(
 #        FLAGS.dataset_name, FLAGS.dataset_split_name, FLAGS.dataset_dir)
-    dataset = segmentation_dataset.get_video10_dataset(
+    if FLAGS.train_length==1:
+      dataset = segmentation_dataset.get_dataset(
+        FLAGS.dataset_name, FLAGS.dataset_split_name, dataset_dir=FLAGS.dataset_dir)
+    else:
+      dataset = segmentation_dataset.get_video10_dataset(
         FLAGS.dataset_name, FLAGS.dataset_split_name, dataset_dir=FLAGS.dataset_dir)
     # dataset.num_classes = 21
 
@@ -497,19 +502,35 @@ def main(_):
             instance_seg=FLAGS.instance_seg,
             instance_seg_args=instance_seg_args)
       else:
-        samples = input_generator_video.get(
-            dataset,
-            FLAGS.train_crop_size,
-            clone_batch_size,
-            min_resize_value=FLAGS.min_resize_value,
-            max_resize_value=FLAGS.max_resize_value,
-            resize_factor=FLAGS.resize_factor,
-            min_scale_factor=FLAGS.min_scale_factor,
-            max_scale_factor=FLAGS.max_scale_factor,
-            scale_factor_step_size=FLAGS.scale_factor_step_size,
-            dataset_split=FLAGS.dataset_split_name,
-            is_training=True,
-            model_variant=FLAGS.model_variant)
+        if FLAGS.train_length ==1:
+          samples = input_generator.get(
+              dataset,
+              FLAGS.train_crop_size,
+              clone_batch_size,
+              min_resize_value=FLAGS.min_resize_value,
+              max_resize_value=FLAGS.max_resize_value,
+              resize_factor=FLAGS.resize_factor,
+              min_scale_factor=FLAGS.min_scale_factor,
+              max_scale_factor=FLAGS.max_scale_factor,
+              scale_factor_step_size=FLAGS.scale_factor_step_size,
+              dataset_split=FLAGS.dataset_split_name,
+              is_training=True,
+              model_variant=FLAGS.model_variant)
+        else:
+          samples = input_generator_video.get(
+              dataset,
+              FLAGS.train_crop_size,
+              clone_batch_size,
+              min_resize_value=FLAGS.min_resize_value,
+              max_resize_value=FLAGS.max_resize_value,
+              resize_factor=FLAGS.resize_factor,
+              min_scale_factor=FLAGS.min_scale_factor,
+              max_scale_factor=FLAGS.max_scale_factor,
+              scale_factor_step_size=FLAGS.scale_factor_step_size,
+              dataset_split=FLAGS.dataset_split_name,
+              is_training=True,
+              model_variant=FLAGS.model_variant)
+
 
       batch_queue = slim.prefetch_queue.prefetch_queue(
           samples, capacity=128 * deploy_config.num_clones)
@@ -543,12 +564,15 @@ def main(_):
 
         print('upsampled logits shape: ', logits_list[cnt].shape)
 
-        scaled_labels = labels[:,:,:,cnt:cnt+1]
+        if FLAGS.train_length == 1:
+          scaled_labels = labels
+        else:
+          scaled_labels = labels[:,:,:,cnt:cnt+1]
         if scaled_labels.shape.ndims == 3:
           scaled_labels = tf.expand_dims(scaled_labels, 3)
         scaled_labels = tf.reshape(scaled_labels, shape=[-1])
         ignore_label = dataset.ignore_label
-        loss_weight = 0.1
+        loss_weight = float(1)/float(FLAGS.train_length)
         not_ignore_mask = tf.to_float(tf.not_equal(scaled_labels,
                                                    ignore_label)) * loss_weight
         one_hot_labels = slim.one_hot_encoding(

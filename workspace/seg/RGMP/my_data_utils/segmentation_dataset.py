@@ -192,6 +192,15 @@ _DAVIS_VIDEO10_INFORMATION = DatasetDescriptor(
     ignore_label=255,
 )
 
+_COCO_TRANS_INFORMATION = DatasetDescriptor(
+    splits_to_sizes = {
+        'cocotrans_train_instance':121462,
+        'cocotrans_test_instance':6509,
+    },
+    num_classes=2,
+    ignore_label=255,
+)
+
 _DATASETS_INFORMATION = {
     'cityscapes': _CITYSCAPES_INFORMATION,
     'pascal_voc_seg': _PASCAL_VOC_SEG_INFORMATION,
@@ -209,7 +218,8 @@ _DATASETS_INFORMATION = {
     'LV-instance-simple': _LV_INSTANCE_SIMPLE_INFORMATION,
     'DAVIS':_DAVIS_INFORMATION,
     'DAVIS-video':_DAVIS_VIDEO_INFORMATION,
-    'DAVIS-video10':_DAVIS_VIDEO10_INFORMATION,
+    'DAVIS-video10':_DAVIS_VIDEO10_INFORMATION,    
+    'COCO-trans':_COCO_TRANS_INFORMATION,
 }
 
 # Default file pattern of TFRecord of TensorFlow Example.
