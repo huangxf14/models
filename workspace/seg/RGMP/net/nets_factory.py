@@ -38,8 +38,9 @@ from net import mobilenet_v2_035_video_double10
 from net import mobilenet_v2_035_video_trainseq
 from net import mobilenet_v2_1_video_trainseq
 from net import mobilenet_v2_035_video_trainseq_concat
-from net import mobilenet_v2_035_video_gc2
-from net import mobilenet_v2_035_video_testrelu
+from net import mobilenet_v2_035_video_trainseq_gc2
+from net import mobilenet_v2_035_video_trainseq_testrelu
+from net import mobilenet_v2_1_video_trainseq_testrelu
 slim = tf.contrib.slim
 
 networks_map = {
@@ -60,8 +61,9 @@ networks_map = {
                 'mobilenet_v2_035_video_trainseq': mobilenet_v2_035_video_trainseq.mobilenet,                
                 'mobilenet_v2_1_video_trainseq': mobilenet_v2_1_video_trainseq.mobilenet,
                 'mobilenet_v2_035_video_trainseq_concat': mobilenet_v2_035_video_trainseq_concat.mobilenet,
-                'mobilenet_v2_035_video_gc2': mobilenet_v2_035_video_gc2.mobilenet,
-                'mobilenet_v2_035_video_testrelu': mobilenet_v2_035_video_testrelu.mobilenet,
+                'mobilenet_v2_035_video_trainseq_gc2': mobilenet_v2_035_video_trainseq_gc2.mobilenet,
+                'mobilenet_v2_035_video_trainseq_testrelu': mobilenet_v2_035_video_trainseq_testrelu.mobilenet,                
+                'mobilenet_v2_1_video_trainseq_testrelu': mobilenet_v2_1_video_trainseq_testrelu.mobilenet,
                }
 
 arg_scopes_map = {
@@ -82,8 +84,9 @@ arg_scopes_map = {
                   'mobilenet_v2_035_video_trainseq': mobilenet_v2_035_video_trainseq.training_scope,                
                   'mobilenet_v2_1_video_trainseq': mobilenet_v2_1_video_trainseq.training_scope,
                   'mobilenet_v2_035_video_trainseq_concat': mobilenet_v2_035_video_trainseq_concat.training_scope,
-                  'mobilenet_v2_035_video_gc2': mobilenet_v2_035_video_gc2.training_scope,
-                  'mobilenet_v2_035_video_testrelu': mobilenet_v2_035_video_testrelu.training_scope,
+                  'mobilenet_v2_035_video_trainseq_gc2': mobilenet_v2_035_video_trainseq_gc2.training_scope,
+                  'mobilenet_v2_035_video_trainseq_testrelu': mobilenet_v2_035_video_trainseq_testrelu.training_scope,                
+                'mobilenet_v2_1_video_trainseq_testrelu': mobilenet_v2_1_video_trainseq_testrelu.training_scope,
                  }
 
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-model_name="mobilenet_v2_1_video_trainseq"
+model_name="mobilenet_v2_035_video_trainseq_testrelu"
 log_dir="dec1/train"
 
 #dataset_name="coco2017_saliency_ext"
@@ -23,7 +23,7 @@ train_steps_new=5000  # 10000 steps, about 8 epoches
 second_stage_dir="all"
 num_clones=1
 batch_size=10
-train_steps=400000     # 100000 steps, about 60 epoches
+train_steps=200000     # 100000 steps, about 60 epoches
 
 batch_two_size=10
 train_two_steps=20000
@@ -47,7 +47,7 @@ WORKSPACE="${HOME}/models/workspace/seg"
 DATASET_INIT_DIR="${HOME}/models/workspace/seg/${tfrecord_init_dir}"
 DATASET_DIR="${HOME}/models/workspace/seg/${tfrecord_dir}"
 INIT_CHECKPOINT="${HOME}/models/workspace/seg/coco-instance/model035_256/all/${ckpt}"
-TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelRGMP1/trans"
+TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelRGMP035_relu/trans"
 #mkdir -p ${TRAIN_DIR}
 
 ##### Start training #####
