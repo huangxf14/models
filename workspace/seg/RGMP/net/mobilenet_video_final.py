@@ -511,7 +511,8 @@ def mobilenet(inputs,
     with tf.variable_scope('MobilenetV2-Decoder', 'Mobilenet', reuse=reuse) as scope_decoder:
       net = tf.concat([net, net2], 3,name='embedding')
 
-      net = GC(net, scope='GC',is_training=is_training)
+      net = GC(net, scope='GC1',is_training=is_training)
+      net = GC(net, scope='GC2',is_training=is_training)
       net = Residual_Block(net,scope='GC_Residual',is_training=is_training)
 
       use_decoder = FLAGS.use_decoder

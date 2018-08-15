@@ -2,7 +2,7 @@
 
 
 project="sample"
-log_dir="RGMP/model_testrelu/all"
+log_dir="RGMP/modelRGMP035/all"
 HOME="/home/corp.owlii.com/xiufeng.huang"
 #HOME="/home/corp.owlii.com/yi.xu"
 TFBAZEL="${HOME}/tensorflow/bazel-bin"
@@ -12,8 +12,8 @@ PYTHONPATH="${PYTHONPATH}:${WORKSPACE}:${WORKSPACE}/.."
 DEPLOY_DIR="${ROOT}/${log_dir}/deploy"
 mkdir -p ${DEPLOY_DIR}
 
-ckpt="${ROOT}/${log_dir}/model.ckpt-125808"
-model_name="mobilenet_v2_035_2_sgmt"
+ckpt="${ROOT}/${log_dir}/model.ckpt-50000"
+model_name="mobilenet_v2_035_video_trainseq"
 frozen_name="frozen_graph"
 deploy_name="deploy_graph"
 input_node="image:0,first:0"
@@ -31,6 +31,7 @@ python deploy.py \
     --output_size=${output_size} \
     --num_classes=${num_classes} \
     --model_name=${model_name} \
+    --train_list=False \
     --use_decoder=True \
     --deploy_output_resizer=False
 

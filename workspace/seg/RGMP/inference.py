@@ -13,7 +13,7 @@ from os import listdir as ls
 
 workspace = '/home/corp.owlii.com/xiufeng.huang/models/workspace/seg/'
 data_dir = '/home/corp.owlii.com/xiufeng.huang/DAVIS/'
-model_dir = workspace + '/RGMP/model_test/all/deploy/'
+model_dir = workspace + '/RGMP/modelvideoseq/ten/deploy/'
 res_dir = model_dir + 'res/'
 if not os.path.exists(res_dir):
   os.makedirs(res_dir)
@@ -38,7 +38,6 @@ class SgmtModel(object):
     self.graph = tf.Graph()
     graph_def = None
     with tf.gfile.GFile(FROZEN_GRAPH_NAME, "rb") as f:
-      print(FROZEN_GRAPH_NAME)
       graph_def = tf.GraphDef().FromString(f.read())
 
     if graph_def is None:
@@ -65,7 +64,6 @@ class SgmtModel(object):
     resized_image = image.convert('RGB').resize(target_size, Image.ANTIALIAS)
 
     the_input = [np.concatenate((np.asarray(resized_image),mask),2)]
-    print(the_input[0][:,:,-1].max())
 
     t1 = time.time()
     heatmap = self.sess.run(
@@ -76,7 +74,7 @@ class SgmtModel(object):
 
     heatmap = heatmap[0, :, :, :]
 
-    print(heatmap.max())
+    print('heatmap max:%d'%(heatmap.max()))
 
     # print(feature[0].max())
     # print(feature[0].min())
@@ -200,7 +198,7 @@ def infer_and_store(filename, use_heatmap=True):
     mask = mask[:,:,np.newaxis]
     heatmap_array = heatmap_array[0:new_height, 0:new_width] * 255
     print('xxxxxx')
-    print(heatmap_array.max())
+    print('result max:%d'%(heatmap_array.max()))
     heatmap_crop = Image.fromarray(np.uint8(heatmap_array))
 #  heatmap_crop.save('data/heatmap_tf.png')
 

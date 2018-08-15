@@ -38,7 +38,7 @@ tf.app.flags.DEFINE_string(
     'Folder containing lists for training and validation')
 tf.app.flags.DEFINE_string(
     'output_dir',
-    './tfrecord',
+    './tfrecord-test',
     'Path to save converted SSTable of TensorFlow examples.')
 
 #tf.app.flags.DEFINE_string(
@@ -123,7 +123,7 @@ def _convert_dataset(dataset_split):
     sys.stdout.flush()
 
 def main(unused_argv):
-  dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, '*.txt'))
+  dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, 'test.txt'))
   for dataset_split in dataset_splits:
     _convert_dataset(dataset_split)
 

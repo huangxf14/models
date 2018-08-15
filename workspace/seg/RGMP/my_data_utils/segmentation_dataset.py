@@ -192,6 +192,15 @@ _DAVIS_VIDEO10_INFORMATION = DatasetDescriptor(
     ignore_label=255,
 )
 
+
+_DAVIS_VIDEOTEST_INFORMATION = DatasetDescriptor(
+    splits_to_sizes = {
+        'test':1,
+    },
+    num_classes=2,
+    ignore_label=255,
+)
+
 _COCO_TRANS_INFORMATION = DatasetDescriptor(
     splits_to_sizes = {
         'cocotrans_train_instance':121462,
@@ -219,6 +228,7 @@ _DATASETS_INFORMATION = {
     'DAVIS':_DAVIS_INFORMATION,
     'DAVIS-video':_DAVIS_VIDEO_INFORMATION,
     'DAVIS-video10':_DAVIS_VIDEO10_INFORMATION,    
+    'DAVIS-test':_DAVIS_VIDEOTEST_INFORMATION,    
     'COCO-trans':_COCO_TRANS_INFORMATION,
 }
 

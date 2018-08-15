@@ -66,7 +66,7 @@ python train_video_sgmt.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.01 \
+  --learning_rate=0.002 \
   --learning_rate_decay_type=fixed \
   --save_interval_secs=600 \
   --save_summaries_secs=600 \
@@ -107,7 +107,7 @@ python train_video_sgmt.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.01 \
+  --learning_rate=0.001 \
   --learning_rate_decay_type=exponential \
   --learning_rate_decay_factor=${lr_decay_factor} \
   --save_interval_secs=1200 \

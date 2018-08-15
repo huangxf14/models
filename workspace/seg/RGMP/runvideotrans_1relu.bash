@@ -13,7 +13,7 @@ tfrecord_init_dir="RGMP/tfrecord-cocotrans"
 dataset_name="DAVIS-video10"
 tfrecord_dir="RGMP/tfrecord-video10"
 
-ckpt="model.ckpt-250000"
+ckpt="model.ckpt-400000"
 checkpoint_exclude_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
 trainable_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
 
@@ -46,7 +46,7 @@ SLIM="${HOME}/models/research/slim"
 WORKSPACE="${HOME}/models/workspace/seg"
 DATASET_INIT_DIR="${HOME}/models/workspace/seg/${tfrecord_init_dir}"
 DATASET_DIR="${HOME}/models/workspace/seg/${tfrecord_dir}"
-INIT_CHECKPOINT="${HOME}/models/workspace/seg/coco-instance/model035_256/all/${ckpt}"
+INIT_CHECKPOINT="${HOME}/models/workspace/seg/coco-instance/model_1.0/all/${ckpt}"
 TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelRGMP1_relu/trans"
 #mkdir -p ${TRAIN_DIR}
 
@@ -107,7 +107,7 @@ python train_video_sgmt.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.01 \
+  --learning_rate=0.002 \
   --learning_rate_decay_type=exponential \
   --learning_rate_decay_factor=${lr_decay_factor} \
   --save_interval_secs=1200 \
