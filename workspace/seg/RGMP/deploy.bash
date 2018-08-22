@@ -2,7 +2,7 @@
 
 
 project="sample"
-log_dir="RGMP/modelRGMP035/all"
+log_dir="RGMP/modelRGMP1/time/ten"
 HOME="/home/corp.owlii.com/xiufeng.huang"
 #HOME="/home/corp.owlii.com/yi.xu"
 TFBAZEL="${HOME}/tensorflow/bazel-bin"
@@ -12,13 +12,13 @@ PYTHONPATH="${PYTHONPATH}:${WORKSPACE}:${WORKSPACE}/.."
 DEPLOY_DIR="${ROOT}/${log_dir}/deploy"
 mkdir -p ${DEPLOY_DIR}
 
-ckpt="${ROOT}/${log_dir}/model.ckpt-50000"
-model_name="mobilenet_v2_035_video_trainseq"
+ckpt="${ROOT}/${log_dir}/model.ckpt-89963"
+model_name="mobilenet_v2_1_video_trainseq_time"
 frozen_name="frozen_graph"
 deploy_name="deploy_graph"
 input_node="image:0,first:0"
 output_node="heatmap:0"
-input_shape="1,512,512,4"
+input_shape="1,512,512,8"
 output_size="512,512"
 num_classes=2
 
@@ -43,8 +43,8 @@ ${TFBAZEL}/tensorflow/tools/graph_transforms/transform_graph \
     --transforms='strip_unused_nodes
                   remove_nodes(op=Identity, op=CheckNumerics)
                   fold_constants(ignore_errors=true)
-                  fold_batch_norms
-                  fold_old_batch_norms'
+                  fold_batch_norms'
+    #              fold_old_batch_norms'
 
 python ${ROOT}/my_graph_utils/pb2pbtxt.py \
     --pb_path="${DEPLOY_DIR}/${deploy_name}.pb" \

@@ -13,7 +13,7 @@ from os import listdir as ls
 
 workspace = '/home/corp.owlii.com/xiufeng.huang/models/workspace/seg/'
 data_dir = '/home/corp.owlii.com/xiufeng.huang/DAVIS/'
-model_dir = workspace + '/RGMP/modelvideoseq/ten/deploy/'
+model_dir = workspace + '/RGMP/modelRGMP1/time/ten/deploy/'
 res_dir = model_dir + 'res/'
 if not os.path.exists(res_dir):
   os.makedirs(res_dir)
@@ -32,6 +32,7 @@ class SgmtModel(object):
   FIRST_FEATURE_NAME = 'first:0'
   OUTPUT_TENSOR_NAME = 'heatmap:0'
   INTERMEDIATE_NAME = 'MobilenetV2/Conv_1/Relu6'
+  INTERMEDIATE_NAME_2 = 'MobilenetV2-Decoder/GC_time/add'
 
   def __init__(self):
     """Creates and loads pretrained deeplab model."""
@@ -48,7 +49,7 @@ class SgmtModel(object):
 
     self.sess = tf.Session(graph=self.graph)
 
-  def run(self, image, mask, first_feature):
+  def run(self, image, mask, first_feature,last_image=None):
     """Runs inference on a single image.
 
     Args:
@@ -63,7 +64,13 @@ class SgmtModel(object):
     target_size = (int(resize_ratio * width), int(resize_ratio * height))
     resized_image = image.convert('RGB').resize(target_size, Image.ANTIALIAS)
 
-    the_input = [np.concatenate((np.asarray(resized_image),mask),2)]
+    # the_input = [np.concatenate((np.asarray(resized_image),mask),2)]
+
+    width, height = last_image.size
+    resize_ratio = 1.0 * INPUT_SIZE / max(width, height)
+    target_size = (int(resize_ratio * width), int(resize_ratio * height))
+    resized_lastimage = last_image.convert('RGB').resize(target_size, Image.ANTIALIAS)
+    the_input = [np.concatenate((np.asarray(resized_image),mask,np.asarray(resized_lastimage),mask),2)]
 
     t1 = time.time()
     heatmap = self.sess.run(
@@ -76,10 +83,17 @@ class SgmtModel(object):
 
     print('heatmap max:%d'%(heatmap.max()))
 
+    feature_node = self.graph.get_operation_by_name(self.INTERMEDIATE_NAME_2).outputs[0]
+    feature = self.sess.run(
+        [feature_node],
+        feed_dict={self.INPUT_TENSOR_NAME: the_input,self.FIRST_FEATURE_NAME:first_feature})
+    feature = feature[0]
+
+
     # print(feature[0].max())
     # print(feature[0].min())
 
-    return heatmap, total
+    return heatmap, total, feature
 
 
   def first(self, image, mask):
@@ -96,7 +110,9 @@ class SgmtModel(object):
     resize_ratio = 1.0 * INPUT_SIZE / max(width, height)
     target_size = (int(resize_ratio * width), int(resize_ratio * height))
     resized_image = image.convert('RGB').resize(target_size, Image.ANTIALIAS)
-    the_input = [np.concatenate((np.asarray(resized_image),mask),2)]
+    # the_input = [np.concatenate((np.asarray(resized_image),mask),2)]
+    the_input = [np.concatenate((np.asarray(resized_image),mask,np.asarray(resized_image),mask),2)]
+    print(the_input[0].dtype)
 
 
     t1 = time.time()
@@ -108,6 +124,17 @@ class SgmtModel(object):
     total = (t2 - t1) * 1000
 
     feature = feature[0]
+
+    t1 = time.time()
+    feature_node = self.graph.get_operation_by_name(self.INTERMEDIATE_NAME_2).outputs[0]
+    feature = self.sess.run(
+        [feature_node],
+        feed_dict={self.INPUT_TENSOR_NAME: the_input,self.FIRST_FEATURE_NAME:feature})
+    t2 = time.time()
+    total += (t2 - t1) * 1000
+
+    feature = feature[0]
+
 
     return feature, total
 
@@ -168,14 +195,17 @@ def infer_and_store(filename, use_heatmap=True):
           value=[0])
       mask = mask_array[:,:,np.newaxis]
 
-      
+    
       first_flag = True
       feature, running_time = model.first(image,mask)
+      last_image = image
       total_time += running_time
 
       continue    
     
-    heatmap, running_time = model.run(image,mask,feature)
+    heatmap, running_time, feature = model.run(image,mask,feature,last_image)
+    # heatmap, running_time= model.run(image,mask,feature)
+    last_image = image
     total_time += running_time
     cnt += 1
     heatmap = np.float32(heatmap) / 255.0
@@ -184,7 +214,10 @@ def infer_and_store(filename, use_heatmap=True):
 
     # post processing
     embed_array = img_array
-    embed_array = np.multiply(img_array, heatmap) 
+    # embed_array = np.multiply(img_array, heatmap) 
+    # print(embed_array.shape)
+    # print(heatmap.shape)
+    embed_array[:,:,0:1] = heatmap * 255
     
     # get results
     embed_crop = embed_array[0:new_height, 0:new_width]
@@ -194,7 +227,7 @@ def infer_and_store(filename, use_heatmap=True):
     heatmap_array = np.squeeze(heatmap)
     mask = np.zeros((heatmap_array.shape[0],heatmap_array.shape[1]))
     mask[0:new_height,0:new_width] = heatmap_array[0:new_height, 0:new_width]
-    mask = np.where(mask>0.5,1,0)
+    # mask = np.where(mask>0.5,1,0)
     mask = mask[:,:,np.newaxis]
     heatmap_array = heatmap_array[0:new_height, 0:new_width] * 255
     print('xxxxxx')
@@ -205,6 +238,10 @@ def infer_and_store(filename, use_heatmap=True):
 
     embed_crop.save(saveroot + 'embed'+ file[:-3] + 'png')
     heatmap_crop.save(saveroot + 'heatmap'+ file[:-3] + 'png')
+    # img_crop = img_array[0:new_height,0:new_width]
+    # img_crop = Image.fromarray(np.uint8(img_crop))
+    # img_crop.save(saveroot + 'img'+ file[:-3] + 'png')
+
 
   if cnt == 0:
     return 0

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-model_name="mobilenet_v2_035_video_final"
+model_name="mobilenet_v2_140_video_trainseq"
 log_dir="dec1/train"
 
 #dataset_name="coco2017_saliency_ext"
@@ -13,9 +13,8 @@ tfrecord_coco_dir="RGMP/tfrecord-cocotrans"
 dataset_init_name="DAVIS"
 tfrecord_init_dir="RGMP/tfrecord"
 dataset_name="DAVIS-video10"
-tfrecord_dir="RGMP/tfrecord-video10"
 
-ckpt="model.ckpt-250000"
+ckpt="mobilenet_v2_1.4_224.ckpt"    
 checkpoint_exclude_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
 trainable_scopes="MobilenetV2-Decoder/Logits,MobilenetV2/Conv,MobilenetV2/Conv_1,MobilenetV2-Decoder/GC,MobilenetV2-Decoder/GC_Residual,MobilenetV2-Decoder/Decoder"
 
@@ -23,27 +22,27 @@ coco_stage_dir="trans"
 train_steps_coco=200000
 
 num_clones_new=1
-batch_size_new=30    # 192 * 2  
+batch_size_new=10    # 192 * 2  
 train_steps_new=5000  # 10000 steps, about 8 epoches
 second_stage_dir="all"
 num_clones=1
-batch_size=20
-train_steps=20000     # 100000 steps, about 60 epoches
+batch_size=8
+train_steps=50000     # 100000 steps, about 60 epoches
 
-batch_two_size=10
-train_two_steps=20000
+batch_two_size=4
+train_two_steps=30000
 two_stage_dir="two"
-batch_four_size=5
-train_four_steps=20000
+batch_four_size=2
+train_four_steps=30000
 four_stage_dir="four"
-batch_seven_size=3
-train_seven_steps=20000
+batch_seven_size=1
+train_seven_steps=30000
 seven_stage_dir="seven"
-batch_ten_size=2
+batch_ten_size=1
 train_ten_steps=200000
 ten_stage_dir='ten'
 
-lr_decay_factor=0.8
+lr_decay_factor=0.65
 
 ###########################################
 HOME="/home/corp.owlii.com/xiufeng.huang"
@@ -52,8 +51,8 @@ WORKSPACE="${HOME}/models/workspace/seg"
 DATASET_INIT_DIR="${HOME}/models/workspace/seg/${tfrecord_init_dir}"
 DATASET_COCO_DIR="${HOME}/models/workspace/seg/${tfrecord_coco_dir}"
 DATASET_DIR="${HOME}/models/workspace/seg/${tfrecord_dir}"
-INIT_CHECKPOINT="${HOME}/models/workspace/seg/coco-instance/model035_256/all/${ckpt}"
-TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelvideofinal035"
+INIT_CHECKPOINT="${HOME}/models/workspace/seg/model/mobilenet_v2_1.4/${ckpt}"  
+TRAIN_DIR="${HOME}/models/workspace/seg/RGMP/modelvideofinal140"
 #mkdir -p ${TRAIN_DIR}
 
 ##### Start training #####
@@ -155,7 +154,7 @@ python train_sgmt_final.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.01 \
+  --learning_rate=0.005 \
   --learning_rate_decay_type=exponential \
   --learning_rate_decay_factor=${lr_decay_factor} \
   --save_interval_secs=1200 \
@@ -195,7 +194,7 @@ python train_sgmt_final.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.01 \
+  --learning_rate=0.001 \
   --learning_rate_decay_type=exponential \
   --learning_rate_decay_factor=${lr_decay_factor} \
   --save_interval_secs=1200 \
@@ -236,7 +235,7 @@ python train_sgmt_final.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.01 \
+  --learning_rate=0.001 \
   --learning_rate_decay_type=exponential \
   --learning_rate_decay_factor=${lr_decay_factor} \
   --save_interval_secs=1200 \
@@ -277,7 +276,7 @@ python train_sgmt_final.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.01 \
+  --learning_rate=0.0005 \
   --learning_rate_decay_type=exponential \
   --learning_rate_decay_factor=${lr_decay_factor} \
   --save_interval_secs=1200 \
@@ -318,7 +317,7 @@ python train_sgmt_final.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.01 \
+  --learning_rate=0.0001 \
   --learning_rate_decay_type=exponential \
   --learning_rate_decay_factor=${lr_decay_factor} \
   --save_interval_secs=1200 \

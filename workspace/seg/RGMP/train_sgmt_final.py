@@ -13,6 +13,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import deeplab
 from deeplab import common
 #from deeplab.datasets import segmentation_dataset
+from my_data_utils import input_generator_video
 from my_data_utils import input_generator
 from deeplab.utils import train_utils
 from datasets import dataset_factory
@@ -284,7 +285,7 @@ def _configure_learning_rate(num_samples_per_epoch, global_step):
     ValueError: if
   """
   decay_steps = int(num_samples_per_epoch / FLAGS.batch_size *
-                    FLAGS.num_epochs_per_decay)
+                    (FLAGS.num_epochs_per_decay/FLAGS.train_length) )
   if FLAGS.sync_replicas:
     decay_steps /= FLAGS.replicas_to_aggregate
 
@@ -448,7 +449,11 @@ def main(_):
     ######################
 #    dataset = dataset_factory.get_dataset(
 #        FLAGS.dataset_name, FLAGS.dataset_split_name, FLAGS.dataset_dir)
-    dataset = segmentation_dataset.get_dataset(
+    if FLAGS.train_length==1:
+      dataset = segmentation_dataset.get_dataset(
+        FLAGS.dataset_name, FLAGS.dataset_split_name, dataset_dir=FLAGS.dataset_dir)
+    else:
+      dataset = segmentation_dataset.get_video10_dataset(
         FLAGS.dataset_name, FLAGS.dataset_split_name, dataset_dir=FLAGS.dataset_dir)
     # dataset.num_classes = 21
 
@@ -497,19 +502,35 @@ def main(_):
             instance_seg=FLAGS.instance_seg,
             instance_seg_args=instance_seg_args)
       else:
-        samples = input_generator.get(
-            dataset,
-            FLAGS.train_crop_size,
-            clone_batch_size,
-            min_resize_value=FLAGS.min_resize_value,
-            max_resize_value=FLAGS.max_resize_value,
-            resize_factor=FLAGS.resize_factor,
-            min_scale_factor=FLAGS.min_scale_factor,
-            max_scale_factor=FLAGS.max_scale_factor,
-            scale_factor_step_size=FLAGS.scale_factor_step_size,
-            dataset_split=FLAGS.dataset_split_name,
-            is_training=True,
-            model_variant=FLAGS.model_variant)
+        if FLAGS.train_length ==1:
+          samples = input_generator.get(
+              dataset,
+              FLAGS.train_crop_size,
+              clone_batch_size,
+              min_resize_value=FLAGS.min_resize_value,
+              max_resize_value=FLAGS.max_resize_value,
+              resize_factor=FLAGS.resize_factor,
+              min_scale_factor=FLAGS.min_scale_factor,
+              max_scale_factor=FLAGS.max_scale_factor,
+              scale_factor_step_size=FLAGS.scale_factor_step_size,
+              dataset_split=FLAGS.dataset_split_name,
+              is_training=True,
+              model_variant=FLAGS.model_variant)
+        else:
+          samples = input_generator_video.get(
+              dataset,
+              FLAGS.train_crop_size,
+              clone_batch_size,
+              min_resize_value=FLAGS.min_resize_value,
+              max_resize_value=FLAGS.max_resize_value,
+              resize_factor=FLAGS.resize_factor,
+              min_scale_factor=FLAGS.min_scale_factor,
+              max_scale_factor=FLAGS.max_scale_factor,
+              scale_factor_step_size=FLAGS.scale_factor_step_size,
+              dataset_split=FLAGS.dataset_split_name,
+              is_training=True,
+              model_variant=FLAGS.model_variant)
+
 
       batch_queue = slim.prefetch_queue.prefetch_queue(
           samples, capacity=128 * deploy_config.num_clones)
@@ -530,34 +551,41 @@ def main(_):
       labels = samples[common.LABEL]
 
       # make predictions!
-      logits, end_points = network_fn(images)
+      logits_list, end_points = network_fn(images)
 
       print('images.shape: ', images.shape)
       print('labels.shape: ', labels.shape)
-      print('logits.shape: ', logits.shape)
+      print('logits.shape: ', logits_list[0].shape)
 
       # define loss
-      logits = tf.image.resize_bilinear(
-          logits, tf.shape(labels)[1:3], align_corners=True)
+      for cnt in range(len(logits_list)):
+        logits_list[cnt] = tf.image.resize_bilinear(
+            logits_list[cnt], tf.shape(labels)[1:3], align_corners=True)
 
-      print('upsampled logits shape: ', logits.shape)
+        print('upsampled logits shape: ', logits_list[cnt].shape)
 
-      scaled_labels = labels
-      scaled_labels = tf.reshape(scaled_labels, shape=[-1])
-      ignore_label = dataset.ignore_label
-      loss_weight = 1.0
-      not_ignore_mask = tf.to_float(tf.not_equal(scaled_labels,
-                                                 ignore_label)) * loss_weight
-      one_hot_labels = slim.one_hot_encoding(
-          scaled_labels, num_classes, on_value=1.0, off_value=0.0)
+        if FLAGS.train_length == 1:
+          scaled_labels = labels
+        else:
+          scaled_labels = labels[:,:,:,cnt:cnt+1]
+        if scaled_labels.shape.ndims == 3:
+          scaled_labels = tf.expand_dims(scaled_labels, 3)
+        scaled_labels = tf.reshape(scaled_labels, shape=[-1])
+        ignore_label = dataset.ignore_label
+        loss_weight = float(1)/float(FLAGS.train_length)
+        not_ignore_mask = tf.to_float(tf.not_equal(scaled_labels,
+                                                   ignore_label)) * loss_weight
+        one_hot_labels = slim.one_hot_encoding(
+            scaled_labels, num_classes, on_value=1.0, off_value=0.0)
 
-      print('one_hot_labels.shape: ', one_hot_labels.shape)
+        print('one_hot_labels.shape: ', one_hot_labels.shape)
 
-      tf.losses.softmax_cross_entropy(
-           one_hot_labels,
-           tf.reshape(logits, shape=[-1, num_classes]),
-           weights=not_ignore_mask,
-           scope=None)  # or scope = loss_scope = 'semantic'? I don't know.
+        tf.losses.softmax_cross_entropy(
+             one_hot_labels,
+             tf.reshape(logits_list[cnt], shape=[-1, num_classes]),
+             weights=not_ignore_mask,
+             scope=None)  # or scope = loss_scope = 'semantic'? I don't know.
+
 
       return end_points
 

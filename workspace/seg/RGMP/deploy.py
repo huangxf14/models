@@ -15,7 +15,7 @@ from net import nets_factory
 flags = tf.app.flags
 
 flags.DEFINE_string('input_shape',
-                    '1,512,512,4', 'As mentioned')
+                    '1,512,512,8', 'As mentioned')
 flags.DEFINE_string('first_shape',
                     '1,16,16,64', 'As mentioned')
 flags.DEFINE_string('output_size',
@@ -154,7 +154,7 @@ def _build_graph(network_fn,
                  output_collection_name):
 
   placeholder_tensor = tf.placeholder(
-      dtype=tf.uint8, shape=input_shape, name='image')
+      dtype=tf.float32, shape=input_shape, name='image')
 
   first_shape = [int(n) for n in FLAGS.first_shape.split(',')]
   placeholder_first = tf.placeholder(

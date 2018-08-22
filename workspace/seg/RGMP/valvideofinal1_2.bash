@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-log_dir="RGMP/modelvideofinal035/trans/all"
-model_name="mobilenet_v2_035_video_final"
+log_dir="RGMP/modelvideofinal1/two"
+model_name="mobilenet_v2_1_video_final"
 
 #dataset_name="coco2017_saliency_ext"
 #tfrecord_dir="coco2017/saliency_ext/tfrecord"
@@ -28,8 +28,8 @@ python eval_sgmt.py \
   --dataset_split_name=cocotrans_test_instance \
   --dataset_dir=${DATASET_DIR} \
   --model_name=${model_name} \
-  --batch_size=8 \
-  --use_cpu=False \
+  --batch_size=1 \
+  --use_cpu=True \
   --eval_interval_secs=10 \
   --min_resize_value=512 \
   --max_resize_value=512 \

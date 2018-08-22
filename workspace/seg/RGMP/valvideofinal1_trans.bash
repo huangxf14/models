@@ -28,8 +28,8 @@ python eval_sgmt.py \
   --dataset_split_name=cocotrans_test_instance \
   --dataset_dir=${DATASET_DIR} \
   --model_name=${model_name} \
-  --batch_size=1 \
-  --use_cpu=True \
+  --batch_size=8 \
+  --use_cpu=False \
   --eval_interval_secs=10 \
   --min_resize_value=512 \
   --max_resize_value=512 \

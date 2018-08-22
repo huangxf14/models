@@ -1,15 +1,15 @@
 #!/bin/bash
 
 
-log_dir="RGMP/modelvideofinal035/trans/all"
-model_name="mobilenet_v2_035_video_final"
+log_dir="RGMP/modelRGMP1/ten"
+model_name="mobilenet_v2_1_video_trainseq"
 
 #dataset_name="coco2017_saliency_ext"
 #tfrecord_dir="coco2017/saliency_ext/tfrecord"
 #dataset_name="owlii_studio"
 #tfrecord_dir="owlii_studio/tfrecord"
-dataset_name="COCO-trans"
-tfrecord_dir="RGMP/tfrecord-cocotrans"
+dataset_name="DAVIS"
+tfrecord_dir="RGMP/tfrecord"
 
 ###################################
 HOME="/home/corp.owlii.com/xiufeng.huang"
@@ -25,11 +25,11 @@ python eval_sgmt.py \
   --checkpoint_path=${VAL_DIR} \
   --eval_dir=${VAL_DIR} \
   --dataset_name=${dataset_name} \
-  --dataset_split_name=cocotrans_test_instance \
+  --dataset_split_name=val-human-2016 \
   --dataset_dir=${DATASET_DIR} \
   --model_name=${model_name} \
-  --batch_size=8 \
-  --use_cpu=False \
+  --batch_size=1 \
+  --use_cpu=True \
   --eval_interval_secs=10 \
   --min_resize_value=512 \
   --max_resize_value=512 \

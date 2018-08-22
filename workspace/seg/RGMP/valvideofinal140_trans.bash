@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-log_dir="RGMP/modelvideofinal035/trans/all"
-model_name="mobilenet_v2_035_video_final"
+log_dir="RGMP/modelvideofinal140/trans/all"
+model_name="mobilenet_v2_140_video_trainseq"
 
 #dataset_name="coco2017_saliency_ext"
 #tfrecord_dir="coco2017/saliency_ext/tfrecord"

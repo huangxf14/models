@@ -43,6 +43,8 @@ from net import mobilenet_v2_035_video_trainseq_testrelu
 from net import mobilenet_v2_1_video_trainseq_testrelu
 from net import mobilenet_v2_035_video_final
 from net import mobilenet_v2_1_video_final
+from net import mobilenet_v2_1_video_trainseq_time
+from net import mobilenet_v2_140_video_trainseq
 slim = tf.contrib.slim
 
 networks_map = {
@@ -68,6 +70,8 @@ networks_map = {
                 'mobilenet_v2_1_video_trainseq_testrelu': mobilenet_v2_1_video_trainseq_testrelu.mobilenet,
                 'mobilenet_v2_035_video_final': mobilenet_v2_035_video_final.mobilenet,
                 'mobilenet_v2_1_video_final': mobilenet_v2_1_video_final.mobilenet,
+                'mobilenet_v2_1_video_trainseq_time': mobilenet_v2_1_video_trainseq_time.mobilenet,
+                'mobilenet_v2_140_video_trainseq': mobilenet_v2_140_video_trainseq.mobilenet,
                }
 
 arg_scopes_map = {
@@ -93,6 +97,8 @@ arg_scopes_map = {
                   'mobilenet_v2_1_video_trainseq_testrelu': mobilenet_v2_1_video_trainseq_testrelu.training_scope,
                   'mobilenet_v2_035_video_final': mobilenet_v2_035_video_final.training_scope,
                   'mobilenet_v2_1_video_final': mobilenet_v2_1_video_final.training_scope,
+                'mobilenet_v2_1_video_trainseq_time': mobilenet_v2_1_video_trainseq_time.training_scope,
+                  'mobilenet_v2_140_video_trainseq': mobilenet_v2_140_video_trainseq.training_scope,
                  }
 
 

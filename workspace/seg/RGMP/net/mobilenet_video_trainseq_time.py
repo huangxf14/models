@@ -23,10 +23,10 @@ FLAGS = tf.app.flags.FLAGS
 # tf.app.flags.DEFINE_bool('use_decoder', False,
 #                          'Whether to use decoder.')
 
-tf.app.flags.DEFINE_integer(
-    'train_length', 1, 'Times that the network repeat')
-tf.app.flags.DEFINE_boolean(
-    'train_list', True, 'Times that the network repeat')
+# tf.app.flags.DEFINE_integer(
+#     'train_length', 1, 'Times that the network repeat')
+# tf.app.flags.DEFINE_boolean(
+#     'train_list', True, 'Times that the network repeat')
 
 
 @slim.add_arg_scope
@@ -399,6 +399,46 @@ def GC(net, scope='GC',kw=7,kh=7,is_training=True,):
     return tf.identity(netl+netr,name='GC_output')
 
 @slim.add_arg_scope
+def GC_time(net, scope='GC_time',kw=7,kh=7,is_training=True,):
+
+  with tf.variable_scope(scope):
+    def conv_1_7(inputs, num_outputs, scope=None):
+      return slim.conv2d(
+                 inputs,
+                 num_outputs,
+                 [1, 7],
+                 scope=scope,
+                 weights_initializer=initializers.xavier_initializer(),
+                 activation_fn=tf.nn.relu,
+                 normalizer_fn=slim.batch_norm,
+                 normalizer_params={'center': True, 'scale': True,
+                                    'is_training': is_training},
+                 biases_initializer=init_ops.zeros_initializer())
+
+    def conv_7_1(inputs, num_outputs, scope=None):
+      return slim.conv2d(
+                 inputs,
+                 num_outputs,
+                 [7, 1],
+                 scope=scope,
+                 weights_initializer=initializers.xavier_initializer(),
+                 activation_fn=tf.nn.relu,
+                 normalizer_fn=slim.batch_norm,
+                 normalizer_params={'center': True, 'scale': True,
+                                    'is_training': is_training},
+                 biases_initializer=init_ops.zeros_initializer())
+
+
+
+    netl = conv_1_7(net, 64)
+    netl = conv_7_1(netl,64)
+
+    netr = conv_7_1(net, 64)
+    netr = conv_1_7(netr, 64)
+
+    return tf.identity(netl+netr,name='GC_output')
+
+@slim.add_arg_scope
 def Residual_Block(net, scope='Residual_Block',is_training=True,):
   def normal_conv(inputs, num_outputs, scope=None):
       return slim.conv2d(
@@ -491,7 +531,7 @@ def mobilenet(inputs,
         else:
           net, end_points = mobilenet_base(inputs[:,:,:,cnt*4+4:cnt*4+8], scope=scope1, **mobilenet_args)
       else:
-        #heatmap = tf.stop_gradient(heatmap)        
+        heatmap = tf.stop_gradient(heatmap)        
         net, end_points = mobilenet_base(tf.concat([inputs[:,:,:,cnt*3+5:cnt*3+8],heatmap[:,:,:,1:2]],3), scope=scope1, **mobilenet_args)
         # net, end_points = mobilenet_base(tf.concat([inputs[:,:,:,:3],mask],3),scope=scope1, **mobilenet_args)
 
@@ -505,10 +545,25 @@ def mobilenet(inputs,
       else:
         net2 = tf.identity(first,'first_feature')
           
+    with tf.variable_scope(scope, reuse=True) as scope3:  
+      if FLAGS.train_length == 1: 
+        net3, end_points3 = mobilenet_base(inputs[:,:,:,4:], scope=scope3, **mobilenet_args)
+      else:
+        if cnt == 0:
+          net3, end_points3 = mobilenet_base(inputs[:,:,:,:4], scope=scope3, **mobilenet_args)     
+        elif cnt == 1:
+          net3, end_points3 = mobilenet_base(tf.concat([inputs[:,:,:,4:7],heatmap[:,:,:,1:2]],3), scope=scope3, **mobilenet_args)        
+        else:
+          net3, end_points3 = mobilenet_base(tf.concat([inputs[:,:,:,cnt*3+2:cnt*3+5],heatmap[:,:,:,1:2]],3), scope=scope3, **mobilenet_args)        
+
     if base_only:
-      return net, end_points
+      return net, end_points 
 
     with tf.variable_scope('MobilenetV2-Decoder', 'Mobilenet', reuse=reuse) as scope_decoder:
+      net2 =tf.concat([net2, net3], 3,name='embedding')
+      net2 = GC_time(net2, scope='GC_time',is_training=is_training)
+      first = net2
+
       net = tf.concat([net, net2], 3,name='embedding')
 
       net = GC(net, scope='GC',is_training=is_training)
