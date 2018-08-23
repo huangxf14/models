@@ -151,7 +151,7 @@ python train_sgmt_final.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.005 \
+  --learning_rate=0.001 \
   --learning_rate_decay_type=exponential \
   --learning_rate_decay_factor=${lr_decay_factor} \
   --save_interval_secs=1200 \
@@ -192,7 +192,7 @@ python train_sgmt_final.py \
   --min_scale_factor=0.5 \
   --max_scale_factor=2.0 \
   --scale_factor_step_size=0 \
-  --learning_rate=0.00005 \
+  --learning_rate=0.00001 \
   --learning_rate_decay_type=exponential \
   --learning_rate_decay_factor=${lr_decay_factor} \
   --save_interval_secs=1200 \

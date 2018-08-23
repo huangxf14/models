@@ -13,7 +13,7 @@ from os import listdir as ls
 
 workspace = '/home/corp.owlii.com/xiufeng.huang/models/workspace/seg/'
 data_dir = '/home/corp.owlii.com/xiufeng.huang/DAVIS/'
-model_dir = workspace + '/RGMP/modelRGMP1/time/ten/deploy/'
+model_dir = workspace + '/RGMP/modelRGMP1/ten/deploy/'
 res_dir = model_dir + 'res/'
 if not os.path.exists(res_dir):
   os.makedirs(res_dir)
@@ -64,13 +64,13 @@ class SgmtModel(object):
     target_size = (int(resize_ratio * width), int(resize_ratio * height))
     resized_image = image.convert('RGB').resize(target_size, Image.ANTIALIAS)
 
-    # the_input = [np.concatenate((np.asarray(resized_image),mask),2)]
+    the_input = [np.concatenate((np.asarray(resized_image),mask),2)]
 
-    width, height = last_image.size
-    resize_ratio = 1.0 * INPUT_SIZE / max(width, height)
-    target_size = (int(resize_ratio * width), int(resize_ratio * height))
-    resized_lastimage = last_image.convert('RGB').resize(target_size, Image.ANTIALIAS)
-    the_input = [np.concatenate((np.asarray(resized_image),mask,np.asarray(resized_lastimage),mask),2)]
+    # width, height = last_image.size
+    # resize_ratio = 1.0 * INPUT_SIZE / max(width, height)
+    # target_size = (int(resize_ratio * width), int(resize_ratio * height))
+    # resized_lastimage = last_image.convert('RGB').resize(target_size, Image.ANTIALIAS)
+    # the_input = [np.concatenate((np.asarray(resized_image),mask,np.asarray(resized_lastimage),mask),2)]
 
     t1 = time.time()
     heatmap = self.sess.run(
@@ -83,17 +83,17 @@ class SgmtModel(object):
 
     print('heatmap max:%d'%(heatmap.max()))
 
-    feature_node = self.graph.get_operation_by_name(self.INTERMEDIATE_NAME_2).outputs[0]
-    feature = self.sess.run(
-        [feature_node],
-        feed_dict={self.INPUT_TENSOR_NAME: the_input,self.FIRST_FEATURE_NAME:first_feature})
-    feature = feature[0]
+    # feature_node = self.graph.get_operation_by_name(self.INTERMEDIATE_NAME_2).outputs[0]
+    # feature = self.sess.run(
+    #     [feature_node],
+    #     feed_dict={self.INPUT_TENSOR_NAME: the_input,self.FIRST_FEATURE_NAME:first_feature})
+    # feature = feature[0]
 
 
     # print(feature[0].max())
     # print(feature[0].min())
 
-    return heatmap, total, feature
+    return heatmap, total#, feature
 
 
   def first(self, image, mask):
@@ -110,8 +110,8 @@ class SgmtModel(object):
     resize_ratio = 1.0 * INPUT_SIZE / max(width, height)
     target_size = (int(resize_ratio * width), int(resize_ratio * height))
     resized_image = image.convert('RGB').resize(target_size, Image.ANTIALIAS)
-    # the_input = [np.concatenate((np.asarray(resized_image),mask),2)]
-    the_input = [np.concatenate((np.asarray(resized_image),mask,np.asarray(resized_image),mask),2)]
+    the_input = [np.concatenate((np.asarray(resized_image),mask),2)]
+    # the_input = [np.concatenate((np.asarray(resized_image),mask,np.asarray(resized_image),mask),2)]
     print(the_input[0].dtype)
 
 
@@ -125,15 +125,15 @@ class SgmtModel(object):
 
     feature = feature[0]
 
-    t1 = time.time()
-    feature_node = self.graph.get_operation_by_name(self.INTERMEDIATE_NAME_2).outputs[0]
-    feature = self.sess.run(
-        [feature_node],
-        feed_dict={self.INPUT_TENSOR_NAME: the_input,self.FIRST_FEATURE_NAME:feature})
-    t2 = time.time()
-    total += (t2 - t1) * 1000
+    # t1 = time.time()
+    # feature_node = self.graph.get_operation_by_name(self.INTERMEDIATE_NAME_2).outputs[0]
+    # feature = self.sess.run(
+    #     [feature_node],
+    #     feed_dict={self.INPUT_TENSOR_NAME: the_input,self.FIRST_FEATURE_NAME:feature})
+    # t2 = time.time()
+    # total += (t2 - t1) * 1000
 
-    feature = feature[0]
+    # feature = feature[0]
 
 
     return feature, total
@@ -203,9 +203,9 @@ def infer_and_store(filename, use_heatmap=True):
 
       continue    
     
-    heatmap, running_time, feature = model.run(image,mask,feature,last_image)
-    # heatmap, running_time= model.run(image,mask,feature)
-    last_image = image
+    # heatmap, running_time, feature = model.run(image,mask,feature,last_image)
+    heatmap, running_time= model.run(image,mask,feature)
+    # last_image = image
     total_time += running_time
     cnt += 1
     heatmap = np.float32(heatmap) / 255.0
